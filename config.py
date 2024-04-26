@@ -7,4 +7,4 @@ class MQ:
     apiport = 15672
     vhost = 'egts'
 
-sec_interval = 2
+sec_interval = 1
