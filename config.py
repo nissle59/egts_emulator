@@ -6,3 +6,5 @@ class MQ:
     port = 5672
     apiport = 15672
     vhost = 'egts'
+
+sec_interval = 2

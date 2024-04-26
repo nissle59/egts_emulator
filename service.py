@@ -12,7 +12,7 @@ import socks
 from ApiService import ApiService
 from EGTStrack import EGTStrack
 from model import *
-from config import MQ
+from config import MQ, sec_interval
 
 
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
@@ -30,7 +30,7 @@ def interpolate_coordinates(point_a, point_b, fraction, cur_point):
 
 def adjust_control_points(segment):
     points = segment.coordinates
-    target_point_count = round(segment.jamsTime)
+    target_point_count = round(segment.jamsTime / sec_interval)
 
     # Не требуется корректировка если количество точек уже удовлетворяет условию
     if len(points) == target_point_count:
@@ -220,5 +220,5 @@ class EgtsService:
 if __name__ == '__main__':
     srv = EgtsService("358480081523995")
     srv.get_route_from_ext(22)
-    srv.push_points_to_mq(1,force=True)
+    srv.push_points_to_mq(sec_interval,force=True)
     # srv.send_egts()
