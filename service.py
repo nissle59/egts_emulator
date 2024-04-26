@@ -23,8 +23,8 @@ def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     lon = point_a.longitude + fraction * lon_diff
     return Point(
         coordinatesId=point_a.coordinatesId + 0.001 * cur_point,
-        latitude=float("{0:.6f}".format(lat)),
-        longitude=float("{0:.6f}".format(lon))
+        latitude=float("{0:.6f}".format(round(lat*1000000)/1000000)),
+        longitude=float("{0:.6f}".format(round(lon*1000000)/1000000))
     )
 
 
