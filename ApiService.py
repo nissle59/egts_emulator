@@ -7,11 +7,18 @@ class ApiService:
 
     @classmethod
     def getRoute(cls, id):
-        return cls.send("route?routeId=" + str(id))
+        result = cls.send("route?routeId=" + str(id))
+        return result
 
     @classmethod
     def getCoordinates(cls, id):
-        return cls.send("route/coordinates?routeId=" + str(id))
+        result = cls.send("route/coordinates?routeId=" + str(id))
+        return result
+
+    @classmethod
+    def getSegments(cls, id):
+        result = cls.send("route/segments?routeId=" + str(id))
+        return result
 
     @staticmethod
     def send(url):
