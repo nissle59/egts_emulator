@@ -183,7 +183,7 @@ class EgtsService:
         self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
-        self.mq_send(point)
+        return self.mq_send(point)
         # print(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
 
     def clear_queue(self):
