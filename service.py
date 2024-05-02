@@ -135,7 +135,7 @@ class EgtsService:
                 routing_key=str(self.imei),
                 body=msg.to_egts_packet(self.imei)
             )
-            print(f"Sent: '{msg}'")
+            return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
         else:
             self.connect_to_mq()
             self.mq_send(msg.to_json())
@@ -198,7 +198,8 @@ class EgtsService:
         msgs = self.mq_get_messages()
         if msgs == 0:
             for point in self.init_points:
-                self.callback_mq_send(point)
+                resp = self.callback_mq_send(point)
+                print(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                 time.sleep(latency)  # Задержка в 1 секунду
             return True
         else:

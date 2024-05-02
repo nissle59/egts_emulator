@@ -112,7 +112,7 @@ class EGTStrack(object):
         # initial_date = datetime.datetime(year=1970, month=1, day=1, hour=0, minute=0, second=0)
         # seconds = int((datetime.datetime.utcnow() - initial_date - datetime.timedelta(minutes=180)).total_seconds()) +(3600*3)
         # print(seconds)
-        print(dt)
+        #print(dt)
         return dt
         #return int(seconds)
 
@@ -259,7 +259,7 @@ class EGTStrack(object):
         if self._service == None:
             raise TypeError('Unknown packet type: {}'.format(self._service))
         self._pid = self._rn
-        print('number packet^', self._pid)
+        #print('number packet^', self._pid)
         if self._service != None:
             self._sfrcs = self.data_crc(self._service).to_bytes(2, byteorder='little')
             self._fdl = len(self._service).to_bytes(2, byteorder='little')
