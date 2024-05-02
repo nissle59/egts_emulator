@@ -8,12 +8,13 @@ from requests.auth import HTTPBasicAuth
 import geopy
 import pika
 import socks
-
+import threading
 from ApiService import ApiService
 from EGTStrack import EGTStrack
 from model import *
 from config import MQ, sec_interval
 
+imeis = []
 
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     """Интерполирует координаты между двумя точками."""
@@ -23,8 +24,8 @@ def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     lon = point_a.longitude + fraction * lon_diff
     return Point(
         coordinatesId=point_a.coordinatesId + 0.001 * cur_point,
-        latitude=float("{0:.6f}".format(round(lat*1000000)/1000000)),
-        longitude=float("{0:.6f}".format(round(lon*1000000)/1000000))
+        latitude=float("{0:.6f}".format(round(lat * 1000000) / 1000000)),
+        longitude=float("{0:.6f}".format(round(lon * 1000000) / 1000000))
     )
 
 
@@ -78,7 +79,6 @@ class EgtsService:
         }
         self.connect_to_mq()
 
-
     def vhosts_list(self):
         r = requests.get(
             url=f'http://{MQ.host}:{MQ.apiport}/api/vhosts',
@@ -109,7 +109,7 @@ class EgtsService:
         )
 
         try:
-        # Установка соединения
+            # Установка соединения
             self.mq_conn = pika.BlockingConnection(connection_params)
         except Exception as e:
             if self.vhost_add(MQ.vhost):
@@ -217,8 +217,27 @@ class EgtsService:
         return self.msg_count
 
 
+def process_thread(imei, sec_interval=1, force=False):
+    srv = EgtsService(imei)
+    srv.get_route_from_ext(22)
+    srv.push_points_to_mq(sec_interval, force=force)
+
+
+def add_imei(imei, sec_interval=1, force=False):
+    if imei not in imeis:
+        thread = threading.Thread(target=process_thread, args=(imei, sec_interval, force), daemon=True)
+        imeis.append(imei)
+        thread.start()
+        print(f'Started thread {imei} with {sec_interval} seconds interval')
+        thread.join()
+        try:
+            imeis.remove(imei)
+        except:
+            pass
+        print(f'Finished thread {imei}')
+
+
 if __name__ == '__main__':
     srv = EgtsService("358480081523995")
     srv.get_route_from_ext(22)
-    srv.push_points_to_mq(sec_interval,force=True)
-    # srv.send_egts()
+    srv.push_points_to_mq(sec_interval, force=True)
