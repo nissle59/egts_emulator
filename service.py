@@ -140,6 +140,19 @@ class EgtsService:
             self.connect_to_mq()
             self.mq_send(msg.to_json())
 
+    def mq_send_eof(self):
+        msg = b'0000000000000000000000000000000000000000000000000000000000000000'
+        if self.mq_conn and self.mq_channel:
+            self.mq_channel.basic_publish(
+                exchange='',
+                routing_key=str(self.imei),
+                body=msg
+            )
+            return f"Sent: '{self.imei} EOF'"
+        else:
+            self.connect_to_mq()
+            self.mq_send_eof()
+
     def disconnect_from_mq(self):
         self.mq_conn.close()
 
@@ -201,6 +214,7 @@ class EgtsService:
                 resp = self.callback_mq_send(point)
                 print(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                 time.sleep(latency)  # Задержка в 1 секунду
+            self.mq_send_eof()
             return True
         else:
             print('Очередь не пуста!')
