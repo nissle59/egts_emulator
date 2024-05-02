@@ -217,15 +217,15 @@ class EgtsService:
         return self.msg_count
 
 
-def process_thread(imei, sec_interval=1, force=False):
+def process_thread(imei, route_id, sec_interval=1, force=False):
     srv = EgtsService(imei)
-    srv.get_route_from_ext(22)
+    srv.get_route_from_ext(int(route_id))
     srv.push_points_to_mq(sec_interval, force=force)
 
 
-def add_imei(imei, sec_interval=1, force=False):
+def add_imei(imei, route_id, sec_interval=1, force=False):
     if imei not in imeis:
-        thread = threading.Thread(target=process_thread, args=(imei, sec_interval, force), daemon=True)
+        thread = threading.Thread(target=process_thread, args=(imei, route_id, sec_interval, force), daemon=True)
         imeis.append(imei)
         thread.start()
         print(f'Started thread {imei} with {sec_interval} seconds interval')
