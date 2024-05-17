@@ -16,14 +16,18 @@ from config import MQ, sec_interval
 
 imeis = []
 
+global CID
+CID = 0
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     """Интерполирует координаты между двумя точками."""
+    CID += 1
     lat_diff = point_b.latitude - point_a.latitude
     lon_diff = point_b.longitude - point_a.longitude
     lat = point_a.latitude + fraction * lat_diff
     lon = point_a.longitude + fraction * lon_diff
     return Point(
-        coordinatesId=point_a.coordinatesId + 0.001 * cur_point,
+        #coordinatesId=point_a.coordinatesId + 0.001 * cur_point,
+        coordinatesId=CID,
         latitude=float("{0:.6f}".format(round(lat * 1000000) / 1000000)),
         longitude=float("{0:.6f}".format(round(lon * 1000000) / 1000000))
     )
@@ -167,19 +171,19 @@ class EgtsService:
 
     def calc_points(self):
         self.init_points = []
-        coord_id = 0
+        CID = 0
         for segment in self.route.results:
             speed = round((segment.length / segment.jamsTime) * 3.6)
             if not speed:
                 speed = 0
             segment.coordinates = adjust_control_points(segment)
             for point in segment.coordinates:
-                coord_id += 1
+                #coord_id += 1
                 i = segment.coordinates.index(point)
                 lat_rand = random.randint(-1, 1) / 1000000
                 long_rand = random.randint(-1, 1) / 1000000
                 speed_random_index = (random.random() - 0.5) * (speed / 20)
-                point.coordinatesId = coord_id
+                #point.coordinatesId = coord_id
                 point.speed = int(round(speed + speed_random_index))
                 # print(point.speed)
                 point.latitude = point.latitude + lat_rand
@@ -199,10 +203,10 @@ class EgtsService:
                     point.angle = segment.coordinates[i - 1].angle
                 self.init_points.append(point)
             if segment.sleep and segment.sleep != 0:
-                coord_id += 1
+                CID += 1
                 self.init_points.append(
                     Point(
-                        coordinatesId=coord_id,
+                        coordinatesId=CID,
                         latitude=lat,
                         longitude=long,
                         speed=0,

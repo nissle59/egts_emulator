@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 class Point(BaseModel):
-    coordinatesId: int | float |None = None
+    coordinatesId: int | float | None = None
     latitude: float
     longitude: float
     speed: int | None = 0
@@ -34,11 +34,11 @@ class Point(BaseModel):
     def to_egts_packet(self, imei):
         egts_instance = EGTStrack(deviceimei=imei)
         egts_instance.add_service(16,
-                                       long=self.longitude,
-                                       lat=self.latitude,
-                                       speed=self.speed,
-                                       angle=self.angle
-                                       )
+                                  long=self.longitude,
+                                  lat=self.latitude,
+                                  speed=self.speed,
+                                  angle=self.angle
+                                  )
         message_b = egts_instance.new_message()
         return message_b
 
@@ -63,4 +63,3 @@ class Segment(BaseModel):
 class Route(BaseModel):
     ok: bool
     results: list[Segment]
-
