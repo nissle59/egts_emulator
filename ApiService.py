@@ -26,4 +26,4 @@ class ApiService:
         req = urllib.request.Request(ApiService.base_url + url)
         with urllib.request.urlopen(req) as response:
             body = response.read()
-        return json.loads(body)['results']
+        return json.loads(body)

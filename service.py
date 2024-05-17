@@ -196,7 +196,7 @@ class EgtsService:
                 else:
                     point.angle = segment.coordinates[i - 1].angle
                 self.init_points.append(point)
-            if segment.sleep:
+            if segment.sleep and segment.sleep != 0:
                 self.init_points.append(
                     Point(
                         coordinatesId=cid+0.0001,
