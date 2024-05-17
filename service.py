@@ -9,6 +9,8 @@ import geopy
 import pika
 import socks
 import threading
+
+import config
 from ApiService import ApiService
 from EGTStrack import EGTStrack
 from model import *
@@ -16,18 +18,17 @@ from config import MQ, sec_interval
 
 imeis = []
 
-global CID
-CID = 0
+
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     """Интерполирует координаты между двумя точками."""
-    CID += 1
+    config.coord_id_now += 1
     lat_diff = point_b.latitude - point_a.latitude
     lon_diff = point_b.longitude - point_a.longitude
     lat = point_a.latitude + fraction * lat_diff
     lon = point_a.longitude + fraction * lon_diff
     return Point(
         #coordinatesId=point_a.coordinatesId + 0.001 * cur_point,
-        coordinatesId=CID,
+        coordinatesId=config.coord_id_now,
         latitude=float("{0:.6f}".format(round(lat * 1000000) / 1000000)),
         longitude=float("{0:.6f}".format(round(lon * 1000000) / 1000000))
     )
@@ -171,7 +172,7 @@ class EgtsService:
 
     def calc_points(self):
         self.init_points = []
-        CID = 0
+        config.coord_id_now = 0
         for segment in self.route.results:
             speed = round((segment.length / segment.jamsTime) * 3.6)
             if not speed:
@@ -190,7 +191,7 @@ class EgtsService:
                 point.longitude = point.longitude + long_rand
                 lat = point.latitude
                 long = point.longitude
-                cid = point.coordinatesId
+                config.coord_id_now = point.coordinatesId
                 if i < len(segment.coordinates) - 1:
                     print(f'i: {i + 1}, len: {len(segment.coordinates)}')
                     coord_next = segment.coordinates[i + 1]
@@ -203,10 +204,10 @@ class EgtsService:
                     point.angle = segment.coordinates[i - 1].angle
                 self.init_points.append(point)
             if segment.sleep and segment.sleep != 0:
-                CID += 1
+                config.coord_id_now += 1
                 self.init_points.append(
                     Point(
-                        coordinatesId=CID,
+                        coordinatesId=config.coord_id_now,
                         latitude=lat,
                         longitude=long,
                         speed=0,

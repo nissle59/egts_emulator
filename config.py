@@ -8,3 +8,4 @@ class MQ:
     vhost = 'egts'
 
 sec_interval = 1
+coord_id_now = 0
