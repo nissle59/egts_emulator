@@ -53,6 +53,7 @@ class Point(BaseModel):
 
 class Segment(BaseModel):
     segmentId: int
+    taskId: int
     jamsTime: float = 0.0
     length: float = 0.0
     sleep: int | None = None
@@ -60,7 +61,6 @@ class Segment(BaseModel):
 
 
 class Route(BaseModel):
-    routeId: int
-    coordinatesCountAll: int = 0
-    segments: list[Segment]
+    ok: bool
+    results: list[Segment]
 

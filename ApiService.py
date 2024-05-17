@@ -3,11 +3,12 @@ import json
 
 
 class ApiService:
-    base_url = 'http://transpropusk.crm.8525.ru/api/services/rnis/'
+    token = '5jossnicxhn75lht7aimal7r2ocvg6o7'
+    base_url = 'http://api-external.tm.8525.ru/rnis/'
 
     @classmethod
     def getRoute(cls, id):
-        result = cls.send("route?routeId=" + str(id))
+        result = cls.send(f"emulation?token={cls.token}&taskId=" + str(id))
         return result
 
     @classmethod

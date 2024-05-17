@@ -167,7 +167,7 @@ class EgtsService:
 
     def calc_points(self):
         self.init_points = []
-        for segment in self.route.segments:
+        for segment in self.route.results:
             speed = round((segment.length / segment.jamsTime) * 3.6)
             if not speed:
                 speed = 0
