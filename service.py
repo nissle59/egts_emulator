@@ -185,6 +185,8 @@ class EgtsService:
                 long_rand = random.randint(-1, 1) / 1000000
                 speed_random_index = (random.random() - 0.5) * (speed / 20)
                 #point.coordinatesId = coord_id
+                if point.coordinatesId is None:
+                    point.coordinatesId = segment.coordinates[segment.coordinates.index(point)-1].coordinatesId+0.001
                 point.speed = int(round(speed + speed_random_index))
                 # print(point.speed)
                 point.latitude = point.latitude + lat_rand
