@@ -18,7 +18,7 @@ from config import MQ, sec_interval
 
 imeis = []
 
-
+config.coord_id_now = 0
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     """Интерполирует координаты между двумя точками."""
     config.coord_id_now += 1
@@ -191,7 +191,7 @@ class EgtsService:
                 point.longitude = point.longitude + long_rand
                 lat = point.latitude
                 long = point.longitude
-                config.coord_id_now = point.coordinatesId
+                #config.coord_id_now = point.coordinatesId
                 if i < len(segment.coordinates) - 1:
                     print(f'i: {i + 1}, len: {len(segment.coordinates)}')
                     coord_next = segment.coordinates[i + 1]
