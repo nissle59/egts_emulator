@@ -167,17 +167,19 @@ class EgtsService:
 
     def calc_points(self):
         self.init_points = []
+        coord_id = 0
         for segment in self.route.results:
             speed = round((segment.length / segment.jamsTime) * 3.6)
             if not speed:
                 speed = 0
             segment.coordinates = adjust_control_points(segment)
             for point in segment.coordinates:
+                coord_id += 1
                 i = segment.coordinates.index(point)
                 lat_rand = random.randint(-1, 1) / 1000000
                 long_rand = random.randint(-1, 1) / 1000000
                 speed_random_index = (random.random() - 0.5) * (speed / 20)
-                point.coordinatesId = float(point.coordinatesId)
+                point.coordinatesId = coord_id
                 point.speed = int(round(speed + speed_random_index))
                 # print(point.speed)
                 point.latitude = point.latitude + lat_rand
@@ -197,9 +199,10 @@ class EgtsService:
                     point.angle = segment.coordinates[i - 1].angle
                 self.init_points.append(point)
             if segment.sleep and segment.sleep != 0:
+                coord_id += 1
                 self.init_points.append(
                     Point(
-                        coordinatesId=cid+0.0001,
+                        coordinatesId=coord_id,
                         latitude=lat,
                         longitude=long,
                         speed=0,
