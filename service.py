@@ -182,6 +182,9 @@ class EgtsService:
                 # print(point.speed)
                 point.latitude = point.latitude + lat_rand
                 point.longitude = point.longitude + long_rand
+                lat = point.latitude
+                long = point.longitude
+                cid = point.coordinatesId
                 if i < len(segment.coordinates) - 1:
                     print(f'i: {i + 1}, len: {len(segment.coordinates)}')
                     coord_next = segment.coordinates[i + 1]
@@ -193,6 +196,17 @@ class EgtsService:
                 else:
                     point.angle = segment.coordinates[i - 1].angle
                 self.init_points.append(point)
+            if segment.sleep:
+                self.init_points.append(
+                    Point(
+                        coordinatesId=cid+0.0001,
+                        latitude=lat,
+                        longitude=long,
+                        speed=0,
+                        angle=0,
+                        sleeper=True,
+                        sleep_time=segment.sleep)
+                )
         self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
@@ -211,9 +225,12 @@ class EgtsService:
         msgs = self.mq_get_messages()
         if msgs == 0:
             for point in self.init_points:
-                resp = self.callback_mq_send(point)
-                print(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
-                time.sleep(latency)  # Задержка в 1 секунду
+                if point.sleeper is False:
+                    resp = self.callback_mq_send(point)
+                    print(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    time.sleep(latency)  # Задержка в 1 секунду
+                else:
+                    time.sleep(point.sleep_time)
             self.mq_send_eof()
             return True
         else:

@@ -11,6 +11,8 @@ class Point(BaseModel):
     longitude: float
     speed: int | None = 0
     angle: int = 0
+    sleeper: bool = False
+    sleep_time: int = 0
 
     def to_json(self):
         return json.dumps({
@@ -18,7 +20,9 @@ class Point(BaseModel):
             "latitude": self.latitude,
             "longitude": self.longitude,
             "speed": self.speed,
-            "angle": self.angle
+            "angle": self.angle,
+            "sleeper": self.sleeper,
+            "sleep_time": self.sleep_time
         })
 
     def to_b64(self):
@@ -51,6 +55,7 @@ class Segment(BaseModel):
     segmentId: int
     jamsTime: float = 0.0
     length: float = 0.0
+    sleep: int | None = None
     coordinates: list[Point]
 
 
