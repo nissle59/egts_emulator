@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 class Point(BaseModel):
-    coordinatesId: int | None = None
+    coordinatesId: int | float |None = None
     latitude: float
     longitude: float
     speed: int | None = 0
