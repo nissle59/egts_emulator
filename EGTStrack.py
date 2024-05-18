@@ -92,10 +92,13 @@ def bitstring_to_bytes(s, byteorder):
 
 class EGTStrack(object):
     #def __init__(self, deviceid, deviceimei=None):
-    def __init__(self, deviceimei):
+    def __init__(self, deviceimei, deviceid=None):
         #self._tid = int(deviceid)
         #self._tid = int(deviceimei)
-        self._tid = 40614705
+        if deviceid:
+            self._tid = int(deviceid)
+        else:
+            self._tid = 40614705
         self._imei = str(deviceimei)
         self._pt = b'\x01'  # Ид пакета # EGTSAppdata
         self._hcs = b'\x00'  # header conlrol sum size = 1 Byte
