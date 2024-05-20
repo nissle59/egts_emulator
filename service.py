@@ -131,7 +131,7 @@ class EgtsService:
         try:
             self.msg_count = self.queue.method.message_count
         except Exception as e:
-            print(e)
+            config.logger.info(e)
 
     def mq_send(self, msg):
         if self.mq_conn and self.mq_channel:
@@ -188,14 +188,14 @@ class EgtsService:
                 # if point.coordinatesId is None:
                 #     point.coordinatesId = segment.coordinates[segment.coordinates.index(point)-1].coordinatesId+0.001
                 point.speed = int(round(speed + speed_random_index))
-                # print(point.speed)
+                # config.logger.info(point.speed)
                 point.latitude = point.latitude + lat_rand
                 point.longitude = point.longitude + long_rand
                 lat = point.latitude
                 long = point.longitude
                 #config.coord_id_now = point.coordinatesId
                 if i < len(segment.coordinates) - 1:
-                    print(f'i: {i + 1}, len: {len(segment.coordinates)}')
+                    config.logger.info(f'i: {i + 1}, len: {len(segment.coordinates)}')
                     coord_next = segment.coordinates[i + 1]
                     point.angle = int(math.atan2(coord_next.longitude - point.longitude,
                                                  coord_next.latitude - point.latitude) * 180 / math.pi)
@@ -221,7 +221,7 @@ class EgtsService:
 
     def callback_mq_send(self, point):
         return self.mq_send(point)
-        # print(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
+        # config.logger.info(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
 
     def clear_queue(self):
         self.mq_channel.queue_purge(queue=self.imei)
@@ -237,14 +237,15 @@ class EgtsService:
             for point in self.init_points:
                 if point.sleeper is False:
                     resp = self.callback_mq_send(point)
-                    print(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    #config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                     time.sleep(latency)  # Задержка в 1 секунду
                 else:
                     time.sleep(point.sleep_time)
             self.mq_send_eof()
             return True
         else:
-            print('Очередь не пуста!')
+            config.logger.info('Очередь не пуста!')
             if force:
                 self.clear_queue()
                 self.push_points_to_mq(latency=latency)
@@ -270,13 +271,13 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
         thread = threading.Thread(target=process_thread, args=(imei, route_id, sec_interval, force), daemon=True)
         imeis.append(imei)
         thread.start()
-        print(f'Started thread {imei} with {sec_interval} seconds interval')
+        config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
         thread.join()
         try:
             imeis.remove(imei)
         except:
             pass
-        print(f'Finished thread {imei}')
+        config.logger.info(f'Finished thread {imei}')
 
 
 if __name__ == '__main__':
