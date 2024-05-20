@@ -2,6 +2,8 @@ import datetime
 from pprint import pprint
 from time import time
 
+import config
+
 dt_offset = 1262293200
 
 CRC8_TABLE = (
