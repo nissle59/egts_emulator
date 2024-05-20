@@ -106,6 +106,8 @@ class EGTStrack(object):
                 self._imei = '0' + self._imei
             self._tid = int(str(self._imei)[-8:])
         self._imei = str(self._imei)[-8:]
+        while len(self._imei) < 15:
+            self._imei = '0' + self._imei
         # self._tid = 40614705
         # self._imei = str(deviceimei)
         self._pt = b'\x01'  # Ид пакета # EGTSAppdata
