@@ -189,11 +189,13 @@ class EgtsService(threading.Thread):
         self.mq_conn.close()
 
     def get_route_from_ext(self, rid):
-        self.rid = rid
+        with threading.Lock:
+            self.rid = rid
         route = ApiService.getRoute(self.rid)
         if route:
             json.dump(route, open('route.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2, default=str)
-            self.route = Route(**route)
+            with threading.Lock:
+                self.route = Route(**route)
         if self.route:
             self.calc_points()
 
@@ -231,19 +233,21 @@ class EgtsService(threading.Thread):
                         point.angle = 360 + point.angle
                 else:
                     point.angle = segment.coordinates[i - 1].angle
-                self.init_points.append(point)
+                with threading.Lock:
+                    self.init_points.append(point)
             if segment.sleep and segment.sleep != 0:
                 config.coord_id_now += 1
-                self.init_points.append(
-                    Point(
-                        coordinatesId=config.coord_id_now,
-                        latitude=lat,
-                        longitude=long,
-                        speed=0,
-                        angle=0,
-                        sleeper=True,
-                        sleep_time=segment.sleep)
-                )
+                with threading.Lock:
+                    self.init_points.append(
+                        Point(
+                            coordinatesId=config.coord_id_now,
+                            latitude=lat,
+                            longitude=long,
+                            speed=0,
+                            angle=0,
+                            sleeper=True,
+                            sleep_time=segment.sleep)
+                    )
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
@@ -263,7 +267,8 @@ class EgtsService(threading.Thread):
         if msgs == 0:
             for point in self.init_points:
                 if not self._stop_event.is_set():
-                    self.current_point = point
+                    with threading.Lock:
+                        self.current_point = point
                     if point.sleeper is False:
                         resp = self.callback_mq_send(point)
                         config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
@@ -273,7 +278,8 @@ class EgtsService(threading.Thread):
                         time.sleep(point.sleep_time)
                 else:
                     break
-            self.init_points = []
+            with threading.Lock:
+                self.init_points = []
             self.mq_send_eof()
             return True
         else:
@@ -314,62 +320,64 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
 
 def stop_imei(imei):
     tid = int(str(imei)[-8:])
-    if config.threads.get(imei, None):
-        config.threads[imei].stop()
-        d = {
-            'status': 'stopped',
-            'id': tid,
-            'imei': imei
-        }
-        try:
-            route = config.threads[imei].rid
-            d['route'] = route
-        except:
-            d['route'] = None
-        try:
-            d['point'] = config.threads[imei].current_point.to_dict()
-            d['point'].pop('coordinatesId')
-        except:
-            d['point'] = None
-        return d
-    else:
-        d = {
-            'status': 'not exists',
-            'id': tid,
-            'imei': imei,
-            'route': None,
-        }
-        return d
+    with threading.Lock:
+        if config.threads.get(imei, None):
+            config.threads[imei].stop()
+            d = {
+                'status': 'stopped',
+                'id': tid,
+                'imei': imei
+            }
+            try:
+                route = config.threads[imei].rid
+                d['route'] = route
+            except:
+                d['route'] = None
+            try:
+                d['point'] = config.threads[imei].current_point.to_dict()
+                d['point'].pop('coordinatesId')
+            except:
+                d['point'] = None
+            return d
+        else:
+            d = {
+                'status': 'not exists',
+                'id': tid,
+                'imei': imei,
+                'route': None,
+            }
+            return d
 
 
 def get_imei_point(imei):
     tid = int(str(imei)[-8:])
-    if config.threads.get(imei, None):
-        d = {
-            'status': 'running',
-            'id':tid,
-            'imei': imei
-        }
-        try:
-            route = config.threads[imei].rid
-            d['route'] = route
-        except:
-            d['route'] = None
-        try:
-            d['point'] = config.threads[imei].current_point.to_dict()
-            d['point'].pop('coordinatesId')
-        except:
-            d['point'] = None
+    with threading.Lock:
+        if config.threads.get(imei, None):
+            d = {
+                'status': 'running',
+                'id':tid,
+                'imei': imei
+            }
+            try:
+                route = config.threads[imei].rid
+                d['route'] = route
+            except:
+                d['route'] = None
+            try:
+                d['point'] = config.threads[imei].current_point.to_dict()
+                d['point'].pop('coordinatesId')
+            except:
+                d['point'] = None
 
-        return d
-    else:
-        d = {
-            'status': 'not exists',
-            'id': tid,
-            'imei': imei,
-            'route': None,
-        }
-        return d
+            return d
+        else:
+            d = {
+                'status': 'not exists',
+                'id': tid,
+                'imei': imei,
+                'route': None,
+            }
+            return d
 
 
 if __name__ == '__main__':
