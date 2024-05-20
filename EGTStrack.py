@@ -99,11 +99,11 @@ class EGTStrack(object):
             self._tid = int(deviceid)
             self._imei = str(deviceimei)
             while len(self._imei) < 15:
-                self._imei += '0'
+                self._imei = '0' + self._imei
         else:
             self._imei = str(deviceimei)
             while len(self._imei) < 15:
-                self._imei += '0'
+                self._imei = '0' + self._imei
             self._tid = int(str(self._imei)[:8])
         # self._tid = 40614705
         # self._imei = str(deviceimei)
