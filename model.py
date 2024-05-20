@@ -25,6 +25,17 @@ class Point(BaseModel):
             "sleep_time": self.sleep_time
         })
 
+    def to_dict(self):
+        return {
+            "coordinatesId": self.coordinatesId,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "speed": self.speed,
+            "angle": self.angle,
+            "sleeper": self.sleeper,
+            "sleep_time": self.sleep_time
+        }
+
     def to_b64(self):
         b_code = pickle.dumps(self)
         base64_bytes = base64.b64encode(b_code)

@@ -19,6 +19,28 @@ from config import MQ, sec_interval
 imeis = []
 
 config.coord_id_now = 0
+
+
+class StoppableThread(threading.Thread):
+    def __init__(self, target, args=()):
+        super().__init__()
+        self._stop_event = threading.Event()
+        self._target = target
+        self._args = args
+
+    def run(self):
+        # Пока флаг остановки не установлен, запускаем целевую функцию
+        while not self._stop_event.is_set():
+            self._target(*self._args)
+            # Если функция 'target' быстро завершается и вы хотите
+            # запускать ее многократно, рассмотрите возможность добавления sleep
+            # Если 'target' - долгая функция, которая должна сама следить
+            # за _stop_event, то следите за этим внутри 'target'
+
+    def stop(self):
+        self._stop_event.set()
+
+
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     """Интерполирует координаты между двумя точками."""
     config.coord_id_now += 1
@@ -278,6 +300,7 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
         except:
             pass
         config.logger.info(f'Finished thread {imei}')
+
 
 
 if __name__ == '__main__':

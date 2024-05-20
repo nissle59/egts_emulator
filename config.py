@@ -10,6 +10,8 @@ class MQ:
     apiport = 15672
     vhost = 'egts'
 
+threads = {}
+
 sec_interval = 1
 coord_id_now = 0
 
