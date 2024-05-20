@@ -92,24 +92,13 @@ def bitstring_to_bytes(s, byteorder):
 
 class EGTStrack(object):
     #def __init__(self, deviceid, deviceimei=None):
-    def __init__(self, deviceimei, deviceid=None):
-        #self._tid = int(deviceid)
-        #self._tid = int(deviceimei)
-        if deviceid:
-            self._tid = int(deviceid)
-            self._imei = str(deviceimei)
-            while len(self._imei) < 15:
-                self._imei = '0' + self._imei
-        else:
-            self._imei = str(deviceimei)
-            while len(self._imei) < 15:
-                self._imei = '0' + self._imei
-            self._tid = int(str(self._imei)[-8:])
-        self._imei = str(self._imei)[-8:]
+    def __init__(self, deviceimei):
+        self._imei = str(deviceimei)
+        self._tid = int(str(self._imei)[-8:])
+        self._imei = str(self._tid)
         while len(self._imei) < 15:
             self._imei = '0' + self._imei
-        # self._tid = 40614705
-        # self._imei = str(deviceimei)
+        config.logger.info(f"ID: {self._tid}, IMEI: {deviceimei}, IMEI_CROP: {self._imei}")
         self._pt = b'\x01'  # Ид пакета # EGTSAppdata
         self._hcs = b'\x00'  # header conlrol sum size = 1 Byte
         self._sfrcs = 0  # service force control sum
