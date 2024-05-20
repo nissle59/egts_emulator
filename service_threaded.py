@@ -328,6 +328,7 @@ def stop_imei(imei):
             d['route'] = None
         try:
             d['point'] = config.threads[imei].current_point.to_dict()
+            d['point'].pop('coordinatesId')
         except:
             d['point'] = None
         return d
@@ -356,6 +357,7 @@ def get_imei_point(imei):
             d['route'] = None
         try:
             d['point'] = config.threads[imei].current_point.to_dict()
+            d['point'].pop('coordinatesId')
         except:
             d['point'] = None
 
