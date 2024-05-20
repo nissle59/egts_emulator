@@ -32,10 +32,7 @@ class Point(BaseModel):
         return base64_string
 
     def to_egts_packet(self, imei):
-        if len(str(imei)) < 10:
-            egts_instance = EGTStrack(deviceimei=imei, deviceid=imei)
-        else:
-            egts_instance = EGTStrack(deviceimei=imei)
+        egts_instance = EGTStrack(deviceimei=imei)
         egts_instance.add_service(16,
                                   long=self.longitude,
                                   lat=self.latitude,
