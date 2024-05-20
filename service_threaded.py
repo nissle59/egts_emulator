@@ -315,15 +315,21 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
 def stop_imei(imei):
     tid = int(str(imei)[-8:])
     if imei in config.threads.keys():
-        route = config.threads[imei].rid
         config.threads[imei].stop()
         d = {
             'status': 'stopped',
             'id': tid,
-            'imei': imei,
-            'route': route,
-            'point': config.threads[imei].current_point.to_dict()
+            'imei': imei
         }
+        try:
+            route = config.threads[imei].rid
+            d['route'] = route
+        except:
+            d['route'] = None
+        try:
+            d['point'] = config.threads[imei].current_point.to_dict()
+        except:
+            d['point'] = None
         return d
     else:
         d = {
@@ -338,15 +344,21 @@ def stop_imei(imei):
 def get_imei_point(imei):
     tid = int(str(imei)[-8:])
     if imei in config.threads.keys():
-        route = config.threads[imei].rid
-        config.threads[imei].stop()
         d = {
             'status': 'running',
             'id':tid,
-            'imei': imei,
-            'route': route,
-            'point': config.threads[imei].current_point.to_dict()
+            'imei': imei
         }
+        try:
+            route = config.threads[imei].rid
+            d['route'] = route
+        except:
+            d['route'] = None
+        try:
+            d['point'] = config.threads[imei].current_point.to_dict()
+        except:
+            d['point'] = None
+
         return d
     else:
         d = {
