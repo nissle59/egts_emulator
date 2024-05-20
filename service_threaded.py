@@ -314,7 +314,7 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
 
 def stop_imei(imei):
     tid = int(str(imei)[-8:])
-    if imei in config.threads.keys():
+    if config.threads.get(imei, None):
         config.threads[imei].stop()
         d = {
             'status': 'stopped',
@@ -343,7 +343,7 @@ def stop_imei(imei):
 
 def get_imei_point(imei):
     tid = int(str(imei)[-8:])
-    if imei in config.threads.keys():
+    if config.threads.get(imei, None):
         d = {
             'status': 'running',
             'id':tid,
