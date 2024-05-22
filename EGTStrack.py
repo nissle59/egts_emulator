@@ -113,26 +113,8 @@ class EGTStrack(object):
 
     def get_date_time(self):
         dt = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
-        # initial_date = datetime.datetime(year=1970, month=1, day=1, hour=0, minute=0, second=0)
-        # seconds = int((datetime.datetime.utcnow() - initial_date - datetime.timedelta(minutes=180)).total_seconds()) +(3600*3)
-        # print(seconds)
-        #print(dt)
         return dt
-        #return int(seconds)
 
-    # def get_date_time2(self):
-    #     d = datetime.datetime.now()
-    #     epoch = datetime.datetime(1970, 1, 1)
-    #     return int(
-    #         (d - epoch).total_seconds() /1000
-    #     )
-    #
-    # def get_date_time3(self):
-    #     d = datetime.datetime.utcnow()
-    #     epoch = datetime.datetime(1970, 1, 1)
-    #     return int(
-    #         (d - epoch).total_seconds() / 1000
-    #     )
 
     def add_service(self, record_types, *args, **kwargs):
         if self._service == None:

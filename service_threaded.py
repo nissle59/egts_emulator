@@ -331,6 +331,10 @@ def stop_imei(imei):
             d['point'].pop('coordinatesId')
         except:
             d['point'] = None
+        try:
+            config.threads.pop(imei)
+        except:
+            pass
         return d
     else:
         d = {
