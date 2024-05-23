@@ -175,12 +175,18 @@ class EgtsService(threading.Thread):
     def mq_send_eof(self):
         msg = b'0000000000000000000000000000000000000000000000000000000000000000'
         if self.mq_conn and self.mq_channel:
-            self.mq_channel.basic_publish(
-                exchange='',
-                routing_key=str(self.imei),
-                body=msg
-            )
-            return f"Sent: '{self.imei} EOF'"
+            try:
+                self.mq_channel.basic_publish(
+                    exchange='',
+                    routing_key=str(self.imei),
+                    body=msg
+                )
+                tid = self.rid
+                r = requests.get(f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={tid}&imei={self.imei}", verify=False)
+                return f"Sent: '{self.imei} EOF'"
+            except:
+                self.connect_to_mq()
+                self.mq_send_eof()
         else:
             self.connect_to_mq()
             self.mq_send_eof()
@@ -247,7 +253,12 @@ class EgtsService(threading.Thread):
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
-        return self.mq_send(point)
+        try:
+            return self.mq_send(point)
+        except:
+            self.connect_to_mq()
+            return self.mq_send(point)
+
         # config.logger.info(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
 
     def clear_queue(self):
