@@ -201,7 +201,10 @@ class EgtsService(threading.Thread):
             json.dump(route, open('route.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2, default=str)
             self.route = Route(**route)
         if self.route:
-            self.calc_points()
+            if self.route.ok:
+                self.calc_points()
+            else:
+                config.logger.info(f"{route}")
 
     def calc_points(self):
         self.init_points = []
@@ -285,7 +288,6 @@ class EgtsService(threading.Thread):
                 else:
                     break
             self.init_points = []
-            self.mq_send_eof()
             return True
         else:
             config.logger.info('Очередь не пуста!')
@@ -316,6 +318,7 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
         config.threads[imei].get_route_from_ext(int(route_id))
         imeis.append(imei)
         config.threads[imei].push_points_to_mq(sec_interval, force=force)
+        config.threads[imei].mq_send_eof()
         try:
             imeis.remove(imei)
         except:

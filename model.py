@@ -73,4 +73,8 @@ class Segment(BaseModel):
 
 class Route(BaseModel):
     ok: bool
-    results: list[Segment]
+    results: list[Segment] | None = None
+    error: str | None = None
+
+    def __repr__(self):
+        return json.dumps({ 'ok': self.ok, 'results': self.results, 'error': self.error })
