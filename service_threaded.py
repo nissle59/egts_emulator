@@ -323,6 +323,7 @@ def add_imei(imei, route_id, sec_interval=1, force=False):
             imeis.remove(imei)
         except:
             pass
+        stop_imei(imei)
         config.logger.info(f'Finished thread {imei}')
 
 
