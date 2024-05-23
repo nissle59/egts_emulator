@@ -157,7 +157,7 @@ class EgtsService(threading.Thread):
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
         self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', durable=True, arguments={
             #'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
-            'x-dead-letter-exchange': queue_name  # DLX для перенаправления сообщений
+            'x-dead-letter-exchange': f'{queue_name}_ex'  # DLX для перенаправления сообщений
         })
         self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct')
         self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=queue_name)
