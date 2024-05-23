@@ -1,5 +1,5 @@
 from fastapi import FastAPI, BackgroundTasks
-import service
+#import service
 import service_threaded
 
 app = FastAPI()
