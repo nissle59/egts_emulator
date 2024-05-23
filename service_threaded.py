@@ -170,10 +170,10 @@ class EgtsService(threading.Thread):
             return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
         else:
             self.connect_to_mq()
-            self.mq_send(msg.to_json())
+            self.mq_send(msg)
 
     def mq_send_eof(self):
-        msg = b'0000000000000000000000000000000000000000000000000000000000000000'
+        msg = int(0).to_bytes(64, byteorder='little')
         if self.mq_conn and self.mq_channel:
             try:
                 self.mq_channel.basic_publish(
