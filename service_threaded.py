@@ -155,8 +155,8 @@ class EgtsService(threading.Thread):
 
         # Создание очереди (если не существует)
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
-        self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base',auto_delete=True, durable=True, arguments={
-            #'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
+        self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', durable=True, arguments={
+            'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
             'x-dead-letter-exchange': queue_name  # DLX для перенаправления сообщений
         })
 
@@ -173,22 +173,26 @@ class EgtsService(threading.Thread):
             except Exception as e:
                 mess = msg
             if sleep_time_sec:
-                message_ttl = sleep_time_sec * 1000
-            else:
-                message_ttl = config.sec_interval + 1000
+                self.total_ttl += sleep_time_sec * 1000
                 self.mq_channel.basic_publish(
                     exchange='',
-                    routing_key=str(self.imei)+'_base',
+                    routing_key=str(self.imei) + '_base',
                     body=mess,
                     properties=pika.BasicProperties(
                         delivery_mode=2,  # Сообщение постоянное
-                        expiration=str(message_ttl)  # TTL  устанавливаем для этого сообщения
+                        expiration=str(self.total_ttl)  # TTL  устанавливаем для этого сообщения
                     )
                 )
-                try:
-                    return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
-                except:
-                    return f"Sent: 'EOF'"
+            else:
+                self.mq_channel.basic_publish(
+                    exchange='',
+                    routing_key=str(self.imei) + '_base',
+                    body=mess
+                )
+            try:
+                return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
+            except:
+                return f"Sent: 'EOF'"
             # else:
             #     self.mq_channel.basic_publish(
             #         exchange='',
@@ -319,7 +323,9 @@ class EgtsService(threading.Thread):
         return True
 
     def push_all_points(self):
+        self.total_ttl = 0
         for point in self.init_points:
+            self.total_ttl += config.sec_interval * 1000
             self.current_point = point
             if point.sleeper is False:
                 resp = self.mq_send_base(point)
