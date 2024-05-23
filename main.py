@@ -5,7 +5,7 @@ import service_threaded
 app = FastAPI()
 
 @app.get("/add")
-def add_imei(imei: str, taskId: str, background_tasks: BackgroundTasks, new_format = False):
+def add_imei(imei: str, taskId: str, background_tasks: BackgroundTasks, new_format = 0):
     background_tasks.add_task(service_threaded.add_imei, imei, taskId, new_format)
     return {"status":"started", "id": int(str(imei)[-8:]), "imei": imei, "route": taskId}
 

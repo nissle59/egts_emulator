@@ -356,9 +356,9 @@ class EgtsService(threading.Thread):
 #     srv.push_points_to_mq(sec_interval, force=force)
 
 
-def add_imei(imei, route_id, sec_interval=1, force=False, new_format=False):
+def add_imei(imei, route_id, new_format=0, sec_interval=1, force=False):
     if imei not in imeis:
-        if new_format:
+        if new_format == 1:
             config.logger.info(f"Inserting route for {imei}")
             config.threads[imei] = EgtsService(imei)
             config.threads[imei].get_route_from_ext(int(route_id))
