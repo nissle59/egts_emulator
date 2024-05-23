@@ -183,6 +183,7 @@ class EgtsService(threading.Thread):
                 )
                 tid = self.rid
                 r = requests.get(f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={tid}&imei={self.imei}", verify=False)
+                config.logger.info(f"Sent: '{self.imei} EOF'")
                 return f"Sent: '{self.imei} EOF'"
             except:
                 self.connect_to_mq()
