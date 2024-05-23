@@ -155,10 +155,42 @@ class EgtsService(threading.Thread):
 
         # Создание очереди (если не существует)
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
+        self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base',auto_delete=True, durable=True, arguments={
+            'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
+            'x-dead-letter-exchange': queue_name  # DLX для перенаправления сообщений
+        })
+
         try:
             self.msg_count = self.queue.method.message_count
         except Exception as e:
             config.logger.info(e)
+
+
+    def mq_send_base(self, msg, sleep_time_sec = None):
+        if self.mq_conn and self.mq_channel:
+            if sleep_time_sec:
+                message_ttl = sleep_time_sec * 1000
+                self.mq_channel.basic_publish(
+                    exchange='',
+                    routing_key=str(self.imei)+'_base',
+                    body=msg.to_egts_packet(self.imei),
+                    properties=pika.BasicProperties(
+                        delivery_mode=2,  # Сообщение постоянное
+                        expiration=str(message_ttl)  # TTL  устанавливаем для этого сообщения
+                    )
+                )
+                return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SLEEP: {sleep_time_sec} second(s)'"
+            else:
+                self.mq_channel.basic_publish(
+                    exchange='',
+                    routing_key=str(self.imei)+'_base',
+                    body=msg.to_egts_packet(self.imei)
+                )
+                return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
+        else:
+            self.connect_to_mq()
+            self.mq_send_base(msg)
+
 
     def mq_send(self, msg):
         if self.mq_conn and self.mq_channel:
@@ -274,6 +306,17 @@ class EgtsService(threading.Thread):
         self.mq_channel.queue_delete(queue=self.imei)
         return True
 
+    def push_all_points(self):
+        for point in self.init_points:
+            self.current_point = point
+            if point.sleeper is False:
+                resp = self.mq_send(point)
+                # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+            else:
+                resp = self.mq_send(point, point.sleep_time)
+        self.mq_send(int(0).to_bytes(64, byteorder='little'))
+
     def push_points_to_mq(self, latency=0, force=False):
         msgs = self.mq_get_messages()
         if msgs == 0:
@@ -313,14 +356,21 @@ class EgtsService(threading.Thread):
 #     srv.push_points_to_mq(sec_interval, force=force)
 
 
-def add_imei(imei, route_id, sec_interval=1, force=False):
+def add_imei(imei, route_id, sec_interval=1, force=False, new_format=False):
     if imei not in imeis:
-        config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
-        config.threads[imei] = EgtsService(imei)
-        config.threads[imei].get_route_from_ext(int(route_id))
-        imeis.append(imei)
-        config.threads[imei].push_points_to_mq(sec_interval, force=force)
-        config.threads[imei].mq_send_eof()
+        if new_format:
+            config.logger.info(f"Inserting route for {imei}")
+            config.threads[imei] = EgtsService(imei)
+            config.threads[imei].get_route_from_ext(int(route_id))
+            imeis.append(imei)
+            config.threads[imei].push_all_points()
+        else:
+            config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
+            config.threads[imei] = EgtsService(imei)
+            config.threads[imei].get_route_from_ext(int(route_id))
+            imeis.append(imei)
+            config.threads[imei].push_points_to_mq(sec_interval, force=force)
+            config.threads[imei].mq_send_eof()
         try:
             imeis.remove(imei)
         except:
