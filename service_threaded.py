@@ -168,12 +168,16 @@ class EgtsService(threading.Thread):
 
     def mq_send_base(self, msg, sleep_time_sec = None):
         if self.mq_conn and self.mq_channel:
+            try:
+                mess = msg.to_egts_packet(self.imei)
+            except Exception as e:
+                mess = msg
             if sleep_time_sec:
                 message_ttl = sleep_time_sec * 1000
                 self.mq_channel.basic_publish(
                     exchange='',
                     routing_key=str(self.imei)+'_base',
-                    body=msg.to_egts_packet(self.imei),
+                    body=mess,
                     properties=pika.BasicProperties(
                         delivery_mode=2,  # Сообщение постоянное
                         expiration=str(message_ttl)  # TTL  устанавливаем для этого сообщения
@@ -184,7 +188,7 @@ class EgtsService(threading.Thread):
                 self.mq_channel.basic_publish(
                     exchange='',
                     routing_key=str(self.imei)+'_base',
-                    body=msg.to_egts_packet(self.imei)
+                    body=mess
                 )
                 return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
         else:
@@ -315,7 +319,7 @@ class EgtsService(threading.Thread):
                 # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             else:
                 resp = self.mq_send(point, point.sleep_time)
-        self.mq_send(int(0).to_bytes(64, byteorder='little'))
+        self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
     def push_points_to_mq(self, latency=0, force=False):
         msgs = self.mq_get_messages()
