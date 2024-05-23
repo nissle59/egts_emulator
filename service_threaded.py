@@ -156,7 +156,7 @@ class EgtsService(threading.Thread):
         # Создание очереди (если не существует)
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
         self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base',auto_delete=True, durable=True, arguments={
-            'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
+            #'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
             'x-dead-letter-exchange': queue_name  # DLX для перенаправления сообщений
         })
 
@@ -174,6 +174,8 @@ class EgtsService(threading.Thread):
                 mess = msg
             if sleep_time_sec:
                 message_ttl = sleep_time_sec * 1000
+            else:
+                message_ttl = config.sec_interval + 1000
                 self.mq_channel.basic_publish(
                     exchange='',
                     routing_key=str(self.imei)+'_base',
@@ -183,17 +185,20 @@ class EgtsService(threading.Thread):
                         expiration=str(message_ttl)  # TTL  устанавливаем для этого сообщения
                     )
                 )
-                return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SLEEP: {sleep_time_sec} second(s)'"
-            else:
-                self.mq_channel.basic_publish(
-                    exchange='',
-                    routing_key=str(self.imei)+'_base',
-                    body=mess
-                )
                 try:
                     return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
                 except:
                     return f"Sent: 'EOF'"
+            # else:
+            #     self.mq_channel.basic_publish(
+            #         exchange='',
+            #         routing_key=str(self.imei)+'_base',
+            #         body=mess
+            #     )
+            #     try:
+            #         return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
+            #     except:
+            #         return f"Sent: 'EOF'"
         else:
             self.connect_to_mq()
             self.mq_send_base(msg)
