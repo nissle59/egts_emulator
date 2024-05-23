@@ -1,3 +1,4 @@
+import datetime
 import json
 import math
 import random
@@ -171,7 +172,8 @@ class EgtsService(threading.Thread):
     def mq_send_base(self, msg, sleep_time_sec = None):
         if self.mq_conn and self.mq_channel:
             try:
-                mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
+                #mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
+                mess = msg.to_b64()
             except Exception as e:
                 mess = msg
             if sleep_time_sec:
@@ -219,7 +221,8 @@ class EgtsService(threading.Thread):
             self.mq_channel.basic_publish(
                 exchange='',
                 routing_key=str(self.imei),
-                body=msg.to_egts_packet(self.imei)
+                #body=msg.to_egts_packet(self.imei)
+                body = msg.to_b64()
             )
             return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
         else:
@@ -330,7 +333,10 @@ class EgtsService(threading.Thread):
 
     def push_all_points(self):
         self.total_ttl = 0
+        dt_start = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
         for point in self.init_points:
+            ts = dt_start + round(self.total_ttl)
+            point.timestamp = ts
             self.current_point = point
             if point.sleeper is False:
                 resp = self.mq_send_base(point)
@@ -346,6 +352,8 @@ class EgtsService(threading.Thread):
         if msgs == 0:
             for point in self.init_points:
                 if not self._stop_event.is_set():
+                    ts = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
+                    point.timestamp = ts
                     self.current_point = point
                     if point.sleeper is False:
                         resp = self.callback_mq_send(point)
