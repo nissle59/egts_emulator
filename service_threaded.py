@@ -181,6 +181,7 @@ class EgtsService(threading.Thread):
                     routing_key=str(self.imei),
                     body=msg
                 )
+                self.mq_conn.close()
                 tid = self.rid
                 r = requests.get(f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={tid}&imei={self.imei}", verify=False)
                 config.logger.info(f"Sent: '{self.imei} EOF'")
