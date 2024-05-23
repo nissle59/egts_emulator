@@ -171,7 +171,7 @@ class EgtsService(threading.Thread):
     def mq_send_base(self, msg, sleep_time_sec = None):
         if self.mq_conn and self.mq_channel:
             try:
-                mess = msg.to_egts_packet(self.imei)
+                mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
             except Exception as e:
                 mess = msg
             if sleep_time_sec:
@@ -331,7 +331,6 @@ class EgtsService(threading.Thread):
     def push_all_points(self):
         self.total_ttl = 0
         for point in self.init_points:
-            self.total_ttl += config.sec_interval * 1000
             self.current_point = point
             if point.sleeper is False:
                 resp = self.mq_send_base(point)
@@ -339,6 +338,7 @@ class EgtsService(threading.Thread):
                 # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             else:
                 resp = self.mq_send_base(point, point.sleep_time)
+            self.total_ttl += config.sec_interval * 1000
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
     def push_points_to_mq(self, latency=0, force=False):

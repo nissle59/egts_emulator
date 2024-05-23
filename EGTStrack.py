@@ -111,14 +111,22 @@ class EGTStrack(object):
         self.add_service(1)
 
 
-    def get_date_time(self):
-        dt = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
+    def get_date_time(self, offset = None):
+        if offset:
+            dt = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp()) + offset
+        else:
+            dt = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
         return dt
 
 
     def add_service(self, record_types, *args, **kwargs):
         if self._service == None:
             self._service = b''
+        if kwargs.get('offset', None):
+            offset = kwargs.get('offset', None)
+        else:
+            offset = None
+
         sst = b'\x01'  # Source service type 1 byte
         rst = b'\x01'  # recipient service type 1 byte
         rfl = b'\x00'  # record flags
@@ -126,7 +134,7 @@ class EGTStrack(object):
         rn = self._rn.to_bytes(2, byteorder='little')  # record number
         if record_types == 1:
             _oid = self._tid.to_bytes(4, byteorder='little')
-            tm = (self.get_date_time()-dt_offset).to_bytes(4, byteorder='little')
+            tm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
             rfl = b'\x05'  # record flag
             self._pt = b'\x01'  # Ид пакета # EGTSAppdata
             recLen = b''  # 2 bytes
@@ -145,7 +153,7 @@ class EGTStrack(object):
         elif record_types == 2:
             rfl = b'\x05'  # record flags
             _oid = self._tid.to_bytes(4, byteorder='little')
-            tm = (self.get_date_time()-dt_offset).to_bytes(4, byteorder='little')
+            tm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
             srt = record_types.to_bytes(1, byteorder='little')
             mservice = b''
             mservice += b'\x03'  # MT
@@ -169,7 +177,7 @@ class EGTStrack(object):
             _oid = self._tid.to_bytes(4, byteorder='little')
 
             # время
-            tm = (self.get_date_time()-dt_offset).to_bytes(4, byteorder='little')
+            tm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
 
             # record flags
             rfl = b'\x05'
@@ -189,7 +197,7 @@ class EGTStrack(object):
             lat = int(abs(kwargs['lat']) / 90 * 0xFFFFFFFF).to_bytes(4, byteorder='little')  #
 
             # navigation time (number of seconds since 00:00:00 01.01.2010 UTC)
-            ntm = (self.get_date_time()-dt_offset).to_bytes(4, byteorder='little')
+            ntm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
 
             # defines additional parameters of the navigation parcel;
             flags = llflags.to_bytes(1, byteorder='little')

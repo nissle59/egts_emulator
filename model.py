@@ -42,13 +42,14 @@ class Point(BaseModel):
         base64_string = base64_bytes.decode('utf-8')
         return base64_string
 
-    def to_egts_packet(self, imei):
+    def to_egts_packet(self, imei, offset=None):
         egts_instance = EGTStrack(deviceimei=imei)
         egts_instance.add_service(16,
                                   long=self.longitude,
                                   lat=self.latitude,
                                   speed=self.speed,
-                                  angle=self.angle
+                                  angle=self.angle,
+                                  offset=offset
                                   )
         message_b = egts_instance.new_message()
         return message_b
