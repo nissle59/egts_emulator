@@ -154,7 +154,7 @@ class EgtsService(threading.Thread):
         queue_name = str(self.imei)
 
         # Создание очереди (если не существует)
-        self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False)
+        self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
         try:
             self.msg_count = self.queue.method.message_count
         except Exception as e:
