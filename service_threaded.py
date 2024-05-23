@@ -322,11 +322,11 @@ class EgtsService(threading.Thread):
         for point in self.init_points:
             self.current_point = point
             if point.sleeper is False:
-                resp = self.mq_send(point)
+                resp = self.mq_send_base(point)
                 # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                 # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             else:
-                resp = self.mq_send(point, point.sleep_time)
+                resp = self.mq_send_base(point, point.sleep_time)
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
     def push_points_to_mq(self, latency=0, force=False):
