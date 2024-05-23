@@ -190,7 +190,10 @@ class EgtsService(threading.Thread):
                     routing_key=str(self.imei)+'_base',
                     body=mess
                 )
-                return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
+                try:
+                    return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
+                except:
+                    return f"Sent: 'EOF'"
         else:
             self.connect_to_mq()
             self.mq_send_base(msg)
