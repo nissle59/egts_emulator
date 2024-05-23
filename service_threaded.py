@@ -156,7 +156,7 @@ class EgtsService(threading.Thread):
         # Создание очереди (если не существует)
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
         self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', durable=True, arguments={
-            'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
+            #'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
             'x-dead-letter-exchange': queue_name  # DLX для перенаправления сообщений
         })
 
@@ -187,7 +187,11 @@ class EgtsService(threading.Thread):
                 self.mq_channel.basic_publish(
                     exchange='',
                     routing_key=str(self.imei) + '_base',
-                    body=mess
+                    body=mess,
+                    properties=pika.BasicProperties(
+                        delivery_mode=2,  # Сообщение постоянное
+                        expiration=str(self.total_ttl)  # TTL  устанавливаем для этого сообщения
+                    )
                 )
             try:
                 return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
