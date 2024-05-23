@@ -159,6 +159,8 @@ class EgtsService(threading.Thread):
             #'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
             'x-dead-letter-exchange': queue_name  # DLX для перенаправления сообщений
         })
+        self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct')
+        self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=queue_name)
 
         try:
             self.msg_count = self.queue.method.message_count
