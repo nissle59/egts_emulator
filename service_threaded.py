@@ -357,6 +357,7 @@ class EgtsService(threading.Thread):
 
 
 def add_imei(imei, route_id, sec_interval=1, new_format=0, force=False):
+    config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, INTERVAL: {sec_interval}, FORMAT: {new_format}")
     if imei not in imeis:
         if new_format == 1:
             config.logger.info(f"Inserting route for {imei}")
