@@ -188,7 +188,7 @@ class EgtsService(threading.Thread):
 
         # Создание очереди (если не существует)
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
-        self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', durable=True, arguments={
+        self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True, arguments={
             #'x-message-ttl': config.sec_interval * 1000,  # TTL в миллисекундах
             'x-dead-letter-exchange': f'{queue_name}_ex'  # DLX для перенаправления сообщений
         })
@@ -450,8 +450,8 @@ def add_imei(imei, route_id, sec_interval=1, new_format=0, force=False):
             imeis.remove(imei)
         except:
             pass
-        stop_imei(imei)
-        config.logger.info(f'Finished thread {imei}')
+        # stop_imei(imei)
+        # config.logger.info(f'Finished thread {imei}')
 
 
 # def stop_imei(imei):
