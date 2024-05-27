@@ -8,6 +8,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import geopy
 import pika
+from pika.exceptions import ChannelClosedByBroker
 import socks
 import threading
 
@@ -120,6 +121,10 @@ def get_cur_point(imei):
             # channel.basic_ack(delivery_tag=method_frame.delivery_tag)
         else:
             return None
+
+    except ChannelClosedByBroker as che:
+        config.logger.error(f"{che.reply_code} : {che.reply_text}")
+        return None
 
     except Exception as e:
         config.logger.error(e)
