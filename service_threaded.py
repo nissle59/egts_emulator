@@ -12,6 +12,7 @@ import socks
 import threading
 
 import config
+import model
 from ApiService import ApiService
 from EGTStrack import EGTStrack
 from model import *
@@ -92,6 +93,37 @@ def adjust_control_points(segment):
     while len(interpolated_points) > target_point_count:
         interpolated_points.pop(random.randrange(len(interpolated_points)))
     return interpolated_points
+
+def get_cur_point(imei):
+    try:
+        connection_params = pika.ConnectionParameters(
+            host=MQ.host,
+            port=MQ.port,
+            virtual_host=f'{MQ.vhost}',
+            credentials=pika.PlainCredentials(
+                username=MQ.user,
+                password=MQ.password
+            )
+        )
+        connection = pika.BlockingConnection(connection_params)
+        channel = connection.channel()
+        # Получите одно сообщение из очереди
+        method_frame, header_frame, body = channel.basic_get(queue=f'{imei}_base', auto_ack=False)
+        connection.close()
+        if method_frame:
+            print(method_frame, header_frame, body)
+            # Обработайте сообщение здесь
+            # ...
+            m = model.Point.from_b64(body)
+            return m.to_dict()
+            # Помните, чтобы наконец удалить сообщение, вам нужно будет явно подтвердить его обработку:
+            # channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        else:
+            return None
+
+    except Exception as e:
+        config.logger.error(e)
+        get_cur_point(imei)
 
 
 class EgtsService(threading.Thread):
@@ -201,16 +233,6 @@ class EgtsService(threading.Thread):
                 return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
             except:
                 return f"Sent: 'EOF'"
-            # else:
-            #     self.mq_channel.basic_publish(
-            #         exchange='',
-            #         routing_key=str(self.imei)+'_base',
-            #         body=mess
-            #     )
-            #     try:
-            #         return f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPPED {msg.speed}, ANGLE {msg.angle}'"
-            #     except:
-            #         return f"Sent: 'EOF'"
         else:
             self.connect_to_mq()
             self.mq_send_base(msg)
@@ -321,6 +343,26 @@ class EgtsService(threading.Thread):
             self.connect_to_mq()
             return self.mq_send(point)
 
+    def get_cur_point(self):
+        try:
+            # Получите одно сообщение из очереди
+            method_frame, header_frame, body = self.mq_channel.basic_get(queue=f'{self.imei}_base', auto_ack=False)
+
+            if method_frame:
+                print(method_frame, header_frame, body)
+                # Обработайте сообщение здесь
+                # ...
+                m = model.Point.from_b64(body)
+                return m.to_dict()
+                # Помните, чтобы наконец удалить сообщение, вам нужно будет явно подтвердить его обработку:
+                # channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+            else:
+                return None
+        except:
+            self.connect_to_mq()
+            self.get_cur_point()
+
+
         # config.logger.info(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
 
     def clear_queue(self):
@@ -412,31 +454,120 @@ def add_imei(imei, route_id, sec_interval=1, new_format=0, force=False):
         config.logger.info(f'Finished thread {imei}')
 
 
-def stop_imei(imei):
+# def stop_imei(imei):
+#     tid = int(str(imei)[-8:])
+#     if config.threads.get(imei, None):
+#         config.threads[imei].stop()
+#         d = {
+#             'status': 'stopped',
+#             'id': tid,
+#             'imei': imei
+#         }
+#         try:
+#             route = config.threads[imei].rid
+#             d['route'] = route
+#         except:
+#             d['route'] = None
+#         try:
+#             d['point'] = config.threads[imei].current_point.to_dict()
+#             d['point'].pop('coordinatesId')
+#         except:
+#             d['point'] = None
+#         try:
+#             config.threads.pop(imei)
+#         except:
+#             pass
+#         return d
+#     else:
+#         d = {
+#             'status': 'not exists',
+#             'id': tid,
+#             'imei': imei,
+#             'route': None,
+#         }
+#         return d
+
+
+def queues_list():
+    r = requests.get(f"http://{MQ.host}:{MQ.apiport}/api/queues", auth=(MQ.user, MQ.password), verify=False, proxies=None)
+    js = r.json()
+    #config.logger.info(js)
+    queues = []
+    for item in js:
+        if item.get('vhost', None) == MQ.vhost:
+            name = item.get('name')
+            try:
+                queues.append(int(name))
+            except:
+                pass
+    return queues
+
+
+def get_imei(imei):
+    url_base = f"http://{MQ.host}:{MQ.apiport}/api/queues/{MQ.vhost}/{imei}_base"
     tid = int(str(imei)[-8:])
-    if config.threads.get(imei, None):
-        config.threads[imei].stop()
+    try:
+        r = requests.get(url_base, auth=(MQ.user, MQ.password), verify=False, proxies=None)
+        count = r.json().get('messages', 0)
+        if count > 0:
+            d = {
+                'status': 'running',
+                'id': tid,
+                'imei': imei
+            }
+            try:
+                d['point'] = get_cur_point(imei)
+                d['point'].pop('coordinatesId')
+            except:
+                d['point'] = None
+
+            return d
+        else:
+            d = {
+                'status': 'not exists',
+                'id': tid,
+                'imei': imei,
+                'route': None,
+            }
+            return d
+    except Exception as e:
         d = {
-            'status': 'stopped',
+            'status': 'not exists',
             'id': tid,
-            'imei': imei
+            'imei': imei,
+            'route': None,
         }
-        try:
-            route = config.threads[imei].rid
-            d['route'] = route
-        except:
-            d['route'] = None
-        try:
-            d['point'] = config.threads[imei].current_point.to_dict()
-            d['point'].pop('coordinatesId')
-        except:
-            d['point'] = None
-        try:
-            config.threads.pop(imei)
-        except:
-            pass
         return d
-    else:
+#
+def stop_imei(imei):
+    url_base = f"http://{MQ.host}:{MQ.apiport}/api/queues/{MQ.vhost}/{imei}_base"
+    tid = int(str(imei)[-8:])
+    try:
+        point = get_cur_point(imei)
+        r = requests.delete(url_base, auth=(MQ.user, MQ.password), verify=False, proxies=None)
+        status = r.status_code
+        if status == 204:
+            d = {
+                'status': 'stopped',
+                'id': tid,
+                'imei': imei
+            }
+            try:
+                d['point'] = point
+                d['point'].pop('coordinatesId')
+            except:
+                d['point'] = None
+
+            return d
+        else:
+            d = {
+                'status': 'not exists',
+                'id': tid,
+                'imei': imei,
+                'route': None,
+            }
+            return d
+    except Exception as e:
         d = {
             'status': 'not exists',
             'id': tid,
@@ -454,13 +585,13 @@ def get_imei_point(imei):
             'id':tid,
             'imei': imei
         }
+        # try:
+        #     route = config.threads[imei].rid
+        #     d['route'] = route
+        # except:
+        #     d['route'] = None
         try:
-            route = config.threads[imei].rid
-            d['route'] = route
-        except:
-            d['route'] = None
-        try:
-            d['point'] = config.threads[imei].current_point.to_dict()
+            d['point'] = get_cur_point(imei)
             d['point'].pop('coordinatesId')
         except:
             d['point'] = None
