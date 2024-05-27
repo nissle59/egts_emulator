@@ -551,9 +551,6 @@ def stop_imei(imei):
         point = get_cur_point(imei)
         route = point.get('tid', None)
         r = requests.delete(url_base, auth=(MQ.user, MQ.password), verify=False, proxies=None)
-        r_cb = requests.get(
-            f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={route}&imei={imei}",
-            verify=False)
         status = r.status_code
         if status == 204:
             d = {
@@ -568,7 +565,12 @@ def stop_imei(imei):
                 d['point'].pop('tid')
             except:
                 d['point'] = None
-
+            try:
+                r_cb = requests.get(
+                    f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={route}&imei={imei}",
+                    verify=False)
+            except:
+                pass
             return d
         else:
             d = {
