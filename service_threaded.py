@@ -24,26 +24,6 @@ imeis = []
 config.coord_id_now = 0
 
 
-class StoppableThread(threading.Thread):
-    def __init__(self, target, args=()):
-        super().__init__()
-        self._stop_event = threading.Event()
-        self._target = target
-        self._args = args
-
-    def run(self):
-        # Пока флаг остановки не установлен, запускаем целевую функцию
-        while not self._stop_event.is_set():
-            self._target(*self._args)
-            # Если функция 'target' быстро завершается и вы хотите
-            # запускать ее многократно, рассмотрите возможность добавления sleep
-            # Если 'target' - долгая функция, которая должна сама следить
-            # за _stop_event, то следите за этим внутри 'target'
-
-    def stop(self):
-        self._stop_event.set()
-
-
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
     """Интерполирует координаты между двумя точками."""
     config.coord_id_now += 1
@@ -131,10 +111,10 @@ def get_cur_point(imei):
         get_cur_point(imei)
 
 
-class EgtsService(threading.Thread):
+class EgtsService:
     def __init__(self, device_imei):
-        super().__init__()
-        self._stop_event = threading.Event()
+        # super().__init__()
+        # self._stop_event = threading.Event()
         self.msg_count = 0
         self.imei = device_imei
         self.rid = None
@@ -146,8 +126,8 @@ class EgtsService(threading.Thread):
         }
         self.connect_to_mq()
 
-    def stop(self):
-        self._stop_event.set()
+    # def stop(self):
+    #     self._stop_event.set()
 
     def vhosts_list(self):
         r = requests.get(
@@ -595,34 +575,34 @@ def stop_imei(imei):
         return d
 
 
-def get_imei_point(imei):
-    tid = int(str(imei)[-8:])
-    if config.threads.get(imei, None):
-        d = {
-            'status': 'running',
-            'id':tid,
-            'imei': imei
-        }
-        # try:
-        #     route = config.threads[imei].rid
-        #     d['route'] = route
-        # except:
-        #     d['route'] = None
-        try:
-            d['point'] = get_cur_point(imei)
-            d['point'].pop('coordinatesId')
-        except:
-            d['point'] = None
-
-        return d
-    else:
-        d = {
-            'status': 'not exists',
-            'id': tid,
-            'imei': imei,
-            'route': None,
-        }
-        return d
+# def get_imei_point(imei):
+#     tid = int(str(imei)[-8:])
+#     if config.threads.get(imei, None):
+#         d = {
+#             'status': 'running',
+#             'id':tid,
+#             'imei': imei
+#         }
+#         # try:
+#         #     route = config.threads[imei].rid
+#         #     d['route'] = route
+#         # except:
+#         #     d['route'] = None
+#         try:
+#             d['point'] = get_cur_point(imei)
+#             d['point'].pop('coordinatesId')
+#         except:
+#             d['point'] = None
+#
+#         return d
+#     else:
+#         d = {
+#             'status': 'not exists',
+#             'id': tid,
+#             'imei': imei,
+#             'route': None,
+#         }
+#         return d
 
 
 if __name__ == '__main__':
