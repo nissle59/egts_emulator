@@ -308,6 +308,7 @@ class EgtsService(threading.Thread):
                 # config.logger.info(point.speed)
                 point.latitude = point.latitude + lat_rand
                 point.longitude = point.longitude + long_rand
+                point.tid = self.rid
                 lat = point.latitude
                 long = point.longitude
                 #config.coord_id_now = point.coordinatesId
@@ -510,14 +511,18 @@ def get_imei(imei):
         r = requests.get(url_base, auth=(MQ.user, MQ.password), verify=False, proxies=None)
         count = r.json().get('messages', 0)
         if count > 0:
+            point = get_cur_point(imei)
+            route = point.get('tid', None)
             d = {
                 'status': 'running',
                 'id': tid,
-                'imei': imei
+                'imei': imei,
+                'route': route
             }
             try:
-                d['point'] = get_cur_point(imei)
+                d['point'] = point
                 d['point'].pop('coordinatesId')
+                d['point'].pop('tid')
             except:
                 d['point'] = None
 
@@ -544,17 +549,23 @@ def stop_imei(imei):
     tid = int(str(imei)[-8:])
     try:
         point = get_cur_point(imei)
+        route = point.get('tid', None)
         r = requests.delete(url_base, auth=(MQ.user, MQ.password), verify=False, proxies=None)
+        r_cb = requests.get(
+            f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={route}&imei={imei}",
+            verify=False)
         status = r.status_code
         if status == 204:
             d = {
                 'status': 'stopped',
                 'id': tid,
-                'imei': imei
+                'imei': imei,
+                'route': route
             }
             try:
                 d['point'] = point
                 d['point'].pop('coordinatesId')
+                d['point'].pop('tid')
             except:
                 d['point'] = None
 

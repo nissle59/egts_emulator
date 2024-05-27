@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class Point(BaseModel):
     coordinatesId: int | float | None = None
+    tid: int | None = None
     latitude: float
     longitude: float
     speed: int | None = 0
@@ -21,6 +22,7 @@ class Point(BaseModel):
     def to_dict(self):
         return {
             "coordinatesId": self.coordinatesId,
+            "tid": self.tid,
             "latitude": self.latitude,
             "longitude": self.longitude,
             "speed": self.speed,
