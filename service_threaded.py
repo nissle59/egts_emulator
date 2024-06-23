@@ -75,6 +75,9 @@ def adjust_control_points(segment):
         interpolated_points.pop(random.randrange(len(interpolated_points)))
     return interpolated_points
 
+
+
+
 def get_cur_point(imei):
     try:
         connection_params = pika.ConnectionParameters(
@@ -487,6 +490,33 @@ def queues_list():
             except:
                 pass
     return queues
+
+
+def get_base_queues():
+    url_base = f"http://{MQ.host}:{MQ.apiport}/api/queues/{MQ.vhost}"
+    result = []
+    try:
+        r = requests.get(url_base, auth=(MQ.user, MQ.password), verify=False, proxies=None)
+        items = r.json()
+        for i in items:
+            name = i.get("name", None)
+            if name.find('base')>-1:
+                result.append(name.split('_')[0])
+    except Exception as e:
+        config.logger.info(e)
+    return result
+
+
+def get_imeis():
+    imeis = get_base_queues()
+    result = []
+    for imei in imeis:
+        info = None
+        info = get_imei(imei)
+        if info.get('status', 'not exists') != 'not exists':
+            info['imei']=imei
+            result.append(dict(info))
+    return result
 
 
 def get_imei(imei):
