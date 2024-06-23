@@ -507,8 +507,16 @@ def get_base_queues():
     return result
 
 
-def get_imeis():
-    imeis = get_base_queues()
+def get_imeis(imeis = None):
+    if not imeis:
+        imeis = get_base_queues()
+    else:
+        if isinstance(imeis, str):
+            imeis = [i.strip() for i in imeis.split(',')]
+        elif isinstance(imeis, list):
+            pass
+        else:
+            imeis = []
     result = []
     for imei in imeis:
         info = None

@@ -22,8 +22,13 @@ def get_data(imei: str):
 
 
 @app.get("/getAll")
-def get_data():
+def get_data_all():
     return service_threaded.get_imeis()
+
+
+@app.get("/getList")
+def get_data_list(imei: str):
+    return service_threaded.get_imeis(imeis=imei)
 
 
 @app.get("/stop")
