@@ -196,6 +196,7 @@ class EgtsService:
                 mess = msg.to_b64()
             except Exception as e:
                 mess = msg
+                config.logger.info(e)
             if sleep_time_sec:
                 self.total_ttl += sleep_time_sec * 1000
                 self.mq_channel.basic_publish(
