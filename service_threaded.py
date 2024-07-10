@@ -371,10 +371,11 @@ class EgtsService:
             self.current_point = point
             if point.sleeper is False:
                 resp = self.mq_send_base(point)
-                # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                 # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             else:
                 resp = self.mq_send_base(point, point.sleep_time)
+                config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
@@ -427,6 +428,7 @@ def add_imei(imei, route_id, sec_interval=1, new_format=0, force=False):
             config.threads[imei] = EgtsService(imei)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
+            config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].route)}")
             config.threads[imei].push_all_points()
         else:
             config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
