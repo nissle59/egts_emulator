@@ -301,7 +301,7 @@ class EgtsService:
                 long = point.longitude
                 #config.coord_id_now = point.coordinatesId
                 if i < len(segment.coordinates) - 1:
-                    config.logger.info(f'i: {i + 1}, len: {len(segment.coordinates)}')
+                    #config.logger.info(f'i: {i + 1}, len: {len(segment.coordinates)}')
                     coord_next = segment.coordinates[i + 1]
                     point.angle = int(math.atan2(coord_next.longitude - point.longitude,
                                                  coord_next.latitude - point.latitude) * 180 / math.pi)
