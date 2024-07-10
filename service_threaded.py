@@ -429,13 +429,14 @@ def add_imei(imei, route_id, sec_interval=1, new_format=0, force=False):
             config.threads[imei] = EgtsService(imei)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
-            config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].route)}")
+            config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
             config.threads[imei].push_all_points()
         else:
             config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
             config.threads[imei] = EgtsService(imei)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
+            config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
             config.threads[imei].push_points_to_mq(sec_interval, force=force)
             config.threads[imei].mq_send_eof()
         try:
