@@ -2,7 +2,7 @@ import logging
 import sys
 
 class MQ:
-    host = 'localhost'
+    #host = 'localhost'
     host = 'rmq.local'
     user = 'rmuser'
     password = 'rmpassword'
