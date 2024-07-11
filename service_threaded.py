@@ -550,7 +550,10 @@ def get_imei(imei):
         if count > 0:
             point = get_cur_point(imei)
             route = point.get('tid', None)
-            regnumber = point.get('regnumber', None)
+            try:
+                regnumber = point.get('regnumber', None)
+            except:
+                regnumber = None
             d = {
                 'status': 'running',
                 'id': tid,

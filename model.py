@@ -21,7 +21,7 @@ class Point(BaseModel):
         return json.dumps(self.to_dict())
 
     def to_dict(self):
-        return {
+        d = {
             "coordinatesId": self.coordinatesId,
             "tid": self.tid,
             "latitude": self.latitude,
@@ -30,9 +30,13 @@ class Point(BaseModel):
             "angle": self.angle,
             "sleeper": self.sleeper,
             "sleep_time": self.sleep_time,
-            "timestamp": self.timestamp,
-            "regnumber": self.regnumber
+            "timestamp": self.timestamp
         }
+        try:
+            d['regnumber'] = self.regnumber
+        except:
+            d['regnumber'] = None
+        return
 
     def to_b64(self):
         b_code = pickle.dumps(self)
