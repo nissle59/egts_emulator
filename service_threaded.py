@@ -314,16 +314,18 @@ class EgtsService:
                 self.init_points.append(point)
             if segment.sleep and segment.sleep != 0:
                 config.coord_id_now += 1
-                self.init_points.append(
-                    Point(
-                        coordinatesId=config.coord_id_now,
-                        latitude=lat,
-                        longitude=long,
-                        speed=0,
-                        angle=0,
-                        sleeper=True,
-                        sleep_time=segment.sleep)
-                )
+                for sec in range(segment.sleep):
+                    self.init_points.append(
+                        Point(
+                            coordinatesId=config.coord_id_now,
+                            latitude=lat,
+                            longitude=long,
+                            speed=0,
+                            angle=0,
+                            #sleeper=True,
+                            sleeper=False)
+                            #sleep_time=segment.sleep)
+                    )
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
