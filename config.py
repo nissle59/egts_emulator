@@ -12,7 +12,7 @@ class MQ:
 
 threads = {}
 
-sec_interval = 10
+sec_interval = 1
 coord_id_now = 0
 
 logging.basicConfig(level=logging.INFO)
