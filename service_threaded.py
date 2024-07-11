@@ -115,9 +115,10 @@ def get_cur_point(imei):
 
 
 class EgtsService:
-    def __init__(self, device_imei):
+    def __init__(self, device_imei, reg_number = None):
         # super().__init__()
         # self._stop_event = threading.Event()
+        self.reg_number = reg_number
         self.msg_count = 0
         self.imei = device_imei
         self.rid = None
@@ -298,6 +299,7 @@ class EgtsService:
                 point.latitude = point.latitude + lat_rand
                 point.longitude = point.longitude + long_rand
                 point.tid = self.rid
+                point.regnumber = self.reg_number
                 lat = point.latitude
                 long = point.longitude
                 #config.coord_id_now = point.coordinatesId
@@ -325,7 +327,8 @@ class EgtsService:
                             speed=0,
                             angle=0,
                             #sleeper=True,
-                            sleeper=False)
+                            sleeper=False,
+                            regnumber=self.reg_number)
                             #sleep_time=segment.sleep)
                     )
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
@@ -428,19 +431,19 @@ class EgtsService:
 #     srv.push_points_to_mq(sec_interval, force=force)
 
 
-def add_imei(imei, route_id, sec_interval=1, new_format=0, force=False):
+def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=False):
     config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, INTERVAL: {sec_interval}, FORMAT: {new_format}")
     if imei not in imeis:
         if new_format == 1:
             config.logger.info(f"Inserting route for {imei}")
-            config.threads[imei] = EgtsService(imei)
+            config.threads[imei] = EgtsService(imei, regNumber)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
             config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
             config.threads[imei].push_all_points()
         else:
             config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
-            config.threads[imei] = EgtsService(imei)
+            config.threads[imei] = EgtsService(imei, regNumber)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
             config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
@@ -547,11 +550,13 @@ def get_imei(imei):
         if count > 0:
             point = get_cur_point(imei)
             route = point.get('tid', None)
+            regnumber = point.get('regnumber', None)
             d = {
                 'status': 'running',
                 'id': tid,
                 'imei': imei,
-                'route': route
+                'route': route,
+                'regNumber': regnumber
             }
             try:
                 d['point'] = point

@@ -15,6 +15,7 @@ class Point(BaseModel):
     sleeper: bool = False
     sleep_time: int = 0
     timestamp: int | None = None
+    regnumber: str | None = None
 
     def to_json(self):
         return json.dumps(self.to_dict())
@@ -29,7 +30,8 @@ class Point(BaseModel):
             "angle": self.angle,
             "sleeper": self.sleeper,
             "sleep_time": self.sleep_time,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp,
+            "regnumber": self.regnumber
         }
 
     def to_b64(self):
