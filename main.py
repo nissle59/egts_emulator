@@ -34,3 +34,9 @@ def get_data_list(imei: str):
 @app.get("/stop")
 def stop_imei(imei: str):
     return service_threaded.stop_imei(imei)
+
+@app.get("/stopAll")
+def stop_all():
+    imeis = service_threaded.get_base_queues()
+    for imei in imeis:
+        service_threaded.stop_imei(imei)
