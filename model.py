@@ -36,7 +36,7 @@ class Point(BaseModel):
             d['regnumber'] = self.regnumber
         except:
             d['regnumber'] = None
-        return
+        return d
 
     def to_b64(self):
         b_code = pickle.dumps(self)

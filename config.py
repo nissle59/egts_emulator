@@ -26,4 +26,5 @@ logger.addHandler(handler)
 logger.addHandler(s_handler)
 logger.setLevel(logging.INFO)
 logging.getLogger("pika").setLevel(logging.CRITICAL)
+logging.getLogger("requests").setLevel(logging.CRITICAL)
 logger.propagate = False
