@@ -315,11 +315,13 @@ class EgtsService:
             if segment.sleep and segment.sleep != 0:
                 config.coord_id_now += 1
                 for sec in range(segment.sleep):
+                    lat_rand = random.randint(-1, 1) / 1000000
+                    long_rand = random.randint(-1, 1) / 1000000
                     self.init_points.append(
                         Point(
                             coordinatesId=config.coord_id_now,
-                            latitude=lat,
-                            longitude=long,
+                            latitude=lat+lat_rand,
+                            longitude=long+long_rand,
                             speed=0,
                             angle=0,
                             #sleeper=True,
