@@ -565,6 +565,7 @@ def get_imei(imei):
                 d['point'] = point
                 d['point'].pop('coordinatesId')
                 d['point'].pop('tid')
+                d['point'].pop('regnumber')
             except:
                 d['point'] = None
 
@@ -605,6 +606,7 @@ def stop_imei(imei):
                 d['point'] = point
                 d['point'].pop('coordinatesId')
                 d['point'].pop('tid')
+                d['point'].pop('regnumber')
             except:
                 d['point'] = None
             try:
