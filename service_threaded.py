@@ -373,7 +373,7 @@ class EgtsService:
         dt_start = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
         for point in self.init_points:
             #ts = dt_start + round(self.total_ttl)
-            ts = dt_start + round(total_ttl)
+            ts = dt_start + round(total_ttl / 1000)
             point.timestamp = ts
             self.current_point = point
             if point.sleeper is False:
