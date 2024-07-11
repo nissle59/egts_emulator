@@ -7,7 +7,7 @@ import service_threaded
 app = FastAPI()
 
 @app.get("/add")
-def add_imei(imei: str, taskId: str, regNumber:str, background_tasks: BackgroundTasks, new_format=1):
+def add_imei(imei: str, taskId: str, background_tasks: BackgroundTasks, regNumber:str = None, new_format=1):
     config.logger.info(f"Adding imei to queue, format: {new_format}")
     # if int(new_format) == 1:
     #     service_threaded.add_imei(imei=imei, route_id=taskId, sec_interval=config.sec_interval, new_format=1)
