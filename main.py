@@ -38,5 +38,7 @@ def stop_imei(imei: str):
 @app.get("/stopAll")
 def stop_all():
     imeis = service_threaded.get_base_queues()
+    res = []
     for imei in imeis:
-        service_threaded.stop_imei(imei)
+        res.append(service_threaded.stop_imei(imei))
+    return res
