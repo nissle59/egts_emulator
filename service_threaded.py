@@ -369,9 +369,11 @@ class EgtsService:
 
     def push_all_points(self):
         self.total_ttl = 0
+        total_ttl = 0
         dt_start = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
         for point in self.init_points:
-            ts = dt_start + round(self.total_ttl)
+            #ts = dt_start + round(self.total_ttl)
+            ts = dt_start + round(total_ttl)
             point.timestamp = ts
             self.current_point = point
             if point.sleeper is False:
@@ -382,6 +384,7 @@ class EgtsService:
                 resp = self.mq_send_base(point, point.sleep_time)
                 config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
+            total_ttl += config.sec_interval * 1000
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
     def push_points_to_mq(self, latency=0, force=False):
