@@ -329,8 +329,8 @@ class EgtsService:
                             sleeper=True,
                             #sleeper=False,
                             regnumber=self.reg_number,
-                            tid=self.rid)
-                            #sleep_time=segment.sleep)
+                            tid=self.rid,
+                            sleep_time=segment.sleep)
                     )
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
@@ -374,11 +374,20 @@ class EgtsService:
     def push_all_points(self):
         self.total_ttl = 0
         total_ttl = 0
+        init_sleep_ts = 0
+        sleep_flag = False
         dt_start = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
         for point in self.init_points:
             #ts = dt_start + round(self.total_ttl)
             ts = dt_start + round(total_ttl / 1000)
             point.timestamp = ts
+            if point.sleeper:
+                if sleep_flag is False:
+                    init_sleep_ts = ts
+                sleep_elapsed = round(init_sleep_ts + point.sleep_time - ts)
+                point.sleep_time = sleep_elapsed
+            else:
+                sleep_flag = True
             self.current_point = point
             # if point.sleeper is False:
             resp = self.mq_send_base(point)
