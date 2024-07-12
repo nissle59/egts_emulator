@@ -326,9 +326,10 @@ class EgtsService:
                             longitude=long+long_rand,
                             speed=0,
                             angle=0,
-                            #sleeper=True,
-                            sleeper=False,
-                            regnumber=self.reg_number)
+                            sleeper=True,
+                            #sleeper=False,
+                            regnumber=self.reg_number,
+                            tid=self.rid)
                             #sleep_time=segment.sleep)
                     )
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
@@ -379,13 +380,13 @@ class EgtsService:
             ts = dt_start + round(total_ttl / 1000)
             point.timestamp = ts
             self.current_point = point
-            if point.sleeper is False:
-                resp = self.mq_send_base(point)
-                config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+            # if point.sleeper is False:
+            resp = self.mq_send_base(point)
+            config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                 # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
-            else:
-                resp = self.mq_send_base(point, point.sleep_time)
-                config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+            # else:
+            #     resp = self.mq_send_base(point, point.sleep_time)
+            #     config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
             total_ttl += config.sec_interval * 1000
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
@@ -398,13 +399,13 @@ class EgtsService:
                     ts = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
                     point.timestamp = ts
                     self.current_point = point
-                    if point.sleeper is False:
-                        resp = self.callback_mq_send(point)
-                        config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
-                        #config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
-                        time.sleep(latency)  # Задержка в 1 секунду
-                    else:
-                        time.sleep(point.sleep_time)
+                    # if point.sleeper is False:
+                    resp = self.callback_mq_send(point)
+                    config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    #config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    time.sleep(latency)  # Задержка в 1 секунду
+                    # else:
+                    #     time.sleep(point.sleep_time)
                 else:
                     break
             self.init_points = []
