@@ -197,7 +197,7 @@ class EgtsService:
                 mess = msg.to_b64()
             except Exception as e:
                 mess = msg
-                config.logger.info(e)
+                #config.logger.info(f"Sent: '{self.imei} EOF'")
             if sleep_time_sec:
                 self.total_ttl += sleep_time_sec * 1000
                 self.mq_channel.basic_publish(
@@ -332,6 +332,7 @@ class EgtsService:
                             tid=self.rid,
                             sleep_time=segment.sleep)
                     )
+        self.init_points.append(int(0).to_bytes(64, byteorder='little'))
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
