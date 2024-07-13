@@ -351,8 +351,20 @@ class EgtsService:
                 print(method_frame, header_frame, body)
                 # Обработайте сообщение здесь
                 # ...
-                m = model.Point.from_b64(body)
-                return m.to_dict()
+                try:
+                    m = model.Point.from_b64(body)
+                    return m.to_dict()
+                except Exception as e:
+                    return {
+                        "coordinatesId": 0,
+                        "tid": self.rid,
+                        "speed": 0,
+                        "angle": 0,
+                        "sleeper": False,
+                        "sleep_time": 0,
+                        "timestamp": 0,
+                        "regnumber": self.reg_number
+                    }
                 # Помните, чтобы наконец удалить сообщение, вам нужно будет явно подтвердить его обработку:
                 # channel.basic_ack(delivery_tag=method_frame.delivery_tag)
             else:
@@ -579,6 +591,13 @@ def get_imei(imei):
                 d['point'].pop('regnumber')
             except:
                 d['point'] = None
+            if point.get('timestamp', None) == 0:
+                try:
+                    d.pop('timestamp')
+                except:
+                    pass
+                d['status'] = 'ending...'
+                return d
 
             return d
         else:
@@ -613,6 +632,7 @@ def stop_imei(imei):
                 'imei': imei,
                 'route': route
             }
+
             try:
                 d['point'] = point
                 d['point'].pop('coordinatesId')
@@ -620,6 +640,13 @@ def stop_imei(imei):
                 d['point'].pop('regnumber')
             except:
                 d['point'] = None
+            if point.get('timestamp', None) == 0:
+                try:
+                    d.pop('timestamp')
+                except:
+                    pass
+                d['status'] = 'ending...'
+                return d
             try:
                 r_cb = requests.get(
                     f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={route}&imei={imei}",
