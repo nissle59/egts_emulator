@@ -1,6 +1,8 @@
 import datetime
+import random
+import logging
 import config
-
+LOGGER = logging.getLogger(__name__)
 dt_offset = 1262293200
 
 CRC8_TABLE = (
@@ -86,18 +88,24 @@ CRC16_TABLE = (
 
 
 def bitstring_to_bytes(s, byteorder):
+    LOGGER = logging.getLogger(__name__ + ".bitstring_to_bytes")
     return int(s, 2).to_bytes((len(s) + 7) // 8, byteorder=byteorder)
+
 
 
 class EGTStrack(object):
     #def __init__(self, deviceid, deviceimei=None):
-    def __init__(self, deviceimei):
+    def __init__(self, deviceimei, imsi, msisdn):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--init")
+        self.imsi = imsi
+        self.msisdn = msisdn
         self._imei = str(deviceimei)
         self._tid = int(str(self._imei)[-8:])
+        #self._tid = int(str(self._imei)[-8:])
         self._imei = str(self._tid)
         while len(self._imei) < 15:
             self._imei = '0' + self._imei
-        config.logger.info(f"ID: {self._tid}, IMEI: {deviceimei}, IMEI_CROP: {self._imei}")
+        LOGGER.info(f"ID: {self._tid}, IMEI: {deviceimei}, IMEI_CROP: {self._imei}, IMSI: {self.imsi}, MSISDN: {self.msisdn}")
         self._pt = b'\x01'  # Ид пакета # EGTSAppdata
         self._hcs = b'\x00'  # header conlrol sum size = 1 Byte
         self._sfrcs = 0  # service force control sum
@@ -108,21 +116,29 @@ class EGTStrack(object):
         self.add_service(1)
 
 
-    def get_date_time(self, offset = None):
+    def get_date_time(self, offset = None, ts=None):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--get_date_time")
         if offset:
             dt = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp()) + offset
         else:
             dt = round(datetime.datetime.now(datetime.UTC).replace(tzinfo=None).timestamp())
+        if ts:
+            dt = round(ts)
         return dt
 
 
     def add_service(self, record_types, *args, **kwargs):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--add_service")
         if self._service == None:
             self._service = b''
         if kwargs.get('offset', None):
             offset = kwargs.get('offset', None)
         else:
             offset = None
+        if kwargs.get('ts', None):
+            ts = kwargs.get('ts', None)
+        else:
+            ts = None
 
         sst = b'\x01'  # Source service type 1 byte
         rst = b'\x01'  # recipient service type 1 byte
@@ -131,7 +147,7 @@ class EGTStrack(object):
         rn = self._rn.to_bytes(2, byteorder='little')  # record number
         if record_types == 1:
             _oid = self._tid.to_bytes(4, byteorder='little')
-            tm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
+            tm = (self.get_date_time(offset=offset, ts=ts)-dt_offset).to_bytes(4, byteorder='little')
             rfl = b'\x05'  # record flag
             self._pt = b'\x01'  # Ид пакета # EGTSAppdata
             recLen = b''  # 2 bytes
@@ -140,9 +156,11 @@ class EGTStrack(object):
             mservice += self._tid.to_bytes(4, byteorder='little')
             mservice += b'\x9e'
             mservice += self._imei.encode('utf-8')
-            mservice += '0000000000000000'.encode('utf-8')  # IMSI
+            # mservice += '0000000000000000'.encode('utf-8')  # IMSI
+            mservice += self.imsi.encode('utf-8')  # IMSI
             mservice += 'rus'.encode('utf-8')
-            mservice += '000000000000000'.encode('utf-8')  # MSISDN
+            # mservice += '000000000000000'.encode('utf-8')  # MSISDN
+            mservice += self.msisdn.encode('utf-8')  # MSISDN
             srl = len(mservice).to_bytes(2, byteorder='little')
             _service = srt + srl + mservice
             rl = len(_service).to_bytes(2, byteorder='little')  # record length
@@ -150,7 +168,7 @@ class EGTStrack(object):
         elif record_types == 2:
             rfl = b'\x05'  # record flags
             _oid = self._tid.to_bytes(4, byteorder='little')
-            tm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
+            tm = (self.get_date_time(offset=offset, ts=ts)-dt_offset).to_bytes(4, byteorder='little')
             srt = record_types.to_bytes(1, byteorder='little')
             mservice = b''
             mservice += b'\x03'  # MT
@@ -174,7 +192,7 @@ class EGTStrack(object):
             _oid = self._tid.to_bytes(4, byteorder='little')
 
             # время
-            tm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
+            tm = (self.get_date_time(offset=offset, ts=ts)-dt_offset).to_bytes(4, byteorder='little')
 
             # record flags
             rfl = b'\x05'
@@ -194,7 +212,7 @@ class EGTStrack(object):
             lat = int(abs(kwargs['lat']) / 90 * 0xFFFFFFFF).to_bytes(4, byteorder='little')  #
 
             # navigation time (number of seconds since 00:00:00 01.01.2010 UTC)
-            ntm = (self.get_date_time(offset)-dt_offset).to_bytes(4, byteorder='little')
+            ntm = (self.get_date_time(offset=offset, ts=ts)-dt_offset).to_bytes(4, byteorder='little')
 
             # defines additional parameters of the navigation parcel;
             flags = llflags.to_bytes(1, byteorder='little')
@@ -227,6 +245,7 @@ class EGTStrack(object):
             rl = len(_service).to_bytes(2, byteorder='little')
 
             headService = rl + rn + rfl + _oid + tm + sst + rst
+            LOGGER.info(f"IMEI: {self._imei}, IMSI: {self.imsi}, MSISDN: {self.msisdn}")
         elif record_types == 4:  # GTS_SR_AUTH_SERV_IDENTITY	4	/* Not described in protocol docs*/
             self._pt = b'\x01'  # Ид пакета # EGTSAppdata
             recLen = b''  # 2 bytes
@@ -247,10 +266,11 @@ class EGTStrack(object):
         pass
 
     def new_message(self):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--new_message")
         if self._service == None:
             raise TypeError('Unknown packet type: {}'.format(self._service))
         self._pid = self._rn
-        #config.logger.info('number packet^', self._pid)
+        #LOGGER.info('number packet^', self._pid)
         if self._service != None:
             self._sfrcs = self.data_crc(self._service).to_bytes(2, byteorder='little')
             self._fdl = len(self._service).to_bytes(2, byteorder='little')
@@ -258,14 +278,17 @@ class EGTStrack(object):
         self._hcs = self.header_crc(getBytes).to_bytes(1, byteorder='little')
         getBytes = getBytes + self._hcs + self._service + self._sfrcs
         self._service = None
+        #LOGGER.info(f"ID: {self._tid}, IMEI_CROP: {self._imei}")
         return getBytes
         pass
 
     def header(self):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--header")
         pass
 
     @property
     def bytes(self):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--bytes")
         packetPVR = b'\x01'
         packetSKID = b'\x00'
         packetFLAGS = b'\x00'
@@ -278,18 +301,20 @@ class EGTStrack(object):
         getBytes += packetHL
         getBytes += packetHE
         getBytes += self._fdl  # .to_bytes(2, byteorder='big')
-        # config.logger.info(self._pid.to_bytes(2, byteorder='little'))
+        # LOGGER.info(self._pid.to_bytes(2, byteorder='little'))
         getBytes += self._pid.to_bytes(2, byteorder='little')
         getBytes += self._pt
-        # config.logger.info(len(getBytes))
+        # LOGGER.info(len(getBytes))
         return getBytes
         pass
 
     def __str__(self):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--__str__")
         return self.new_message().hex()
         pass
 
     def header_crc(self, header):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--header_crc")
         """
         Calculate header checksum
         """
@@ -301,6 +326,7 @@ class EGTStrack(object):
         return crc
 
     def data_crc(self, data):
+        LOGGER = logging.getLogger(__name__ + ".EGTStrack--data_crc")
         """
         Calculate data checksum
         """

@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import math
 import random
 import socket
@@ -18,13 +19,14 @@ from ApiService import ApiService
 from EGTStrack import EGTStrack
 from model import *
 from config import MQ, sec_interval
-
+LOGGER = logging.getLogger(__name__)
 imeis = []
 
 config.coord_id_now = 0
 
 
 def interpolate_coordinates(point_a, point_b, fraction, cur_point):
+    LOGGER = logging.getLogger(__name__ + ".interpolate_coordinates")
     """Интерполирует координаты между двумя точками."""
     config.coord_id_now += 1
     lat_diff = point_b.latitude - point_a.latitude
@@ -40,6 +42,7 @@ def interpolate_coordinates(point_a, point_b, fraction, cur_point):
 
 
 def adjust_control_points(segment):
+    LOGGER = logging.getLogger(__name__ + ".adjust_control_points")
     points = segment.coordinates
     target_point_count = round(segment.jamsTime / sec_interval)
 
@@ -79,6 +82,7 @@ def adjust_control_points(segment):
 
 
 def get_cur_point(imei):
+    LOGGER = logging.getLogger(__name__ + ".get_cur_point")
     try:
         connection_params = pika.ConnectionParameters(
             host=MQ.host,
@@ -106,16 +110,17 @@ def get_cur_point(imei):
             return None
 
     except ChannelClosedByBroker as che:
-        config.logger.error(f"{che.reply_code} : {che.reply_text}")
+        LOGGER.error(f"{che.reply_code} : {che.reply_text}")
         return None
 
     except Exception as e:
-        config.logger.error(e)
+        LOGGER.error(e)
         get_cur_point(imei)
 
 
 class EgtsService:
     def __init__(self, device_imei, reg_number = None):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--init")
         # super().__init__()
         # self._stop_event = threading.Event()
         self.reg_number = reg_number
@@ -134,6 +139,7 @@ class EgtsService:
     #     self._stop_event.set()
 
     def vhosts_list(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--vhosts_list")
         r = requests.get(
             url=f'http://{MQ.host}:{MQ.apiport}/api/vhosts',
             auth=HTTPBasicAuth(MQ.user, MQ.password),
@@ -143,6 +149,7 @@ class EgtsService:
             return r.json()
 
     def vhost_add(self, vhost):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--vhost_add")
         r = requests.put(
             url=f'http://{MQ.host}:{MQ.apiport}/api/vhosts/{vhost}',
             auth=HTTPBasicAuth(MQ.user, MQ.password),
@@ -152,6 +159,7 @@ class EgtsService:
             return True
 
     def connect_to_mq(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--connect_to_mq")
         connection_params = pika.ConnectionParameters(
             host=MQ.host,
             port=MQ.port,
@@ -187,17 +195,18 @@ class EgtsService:
         try:
             self.msg_count = self.queue.method.message_count
         except Exception as e:
-            config.logger.info(e)
+            LOGGER.info(e)
 
 
     def mq_send_base(self, msg, sleep_time_sec = None):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--mq_send_base")
         if self.mq_conn and self.mq_channel:
             try:
                 #mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
                 mess = msg.to_b64()
             except Exception as e:
                 mess = msg
-                #config.logger.info(f"Sent: '{self.imei} EOF'")
+                #LOGGER.info(f"Sent: '{self.imei} EOF'")
             if sleep_time_sec:
                 self.total_ttl += sleep_time_sec * 1000
                 self.mq_channel.basic_publish(
@@ -229,6 +238,7 @@ class EgtsService:
 
 
     def mq_send(self, msg):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--mq_send")
         if self.mq_conn and self.mq_channel:
             self.mq_channel.basic_publish(
                 exchange='',
@@ -242,6 +252,7 @@ class EgtsService:
             self.mq_send(msg)
 
     def mq_send_eof(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--mq_send_eof")
         msg = int(0).to_bytes(64, byteorder='little')
         if self.mq_conn and self.mq_channel:
             try:
@@ -253,7 +264,7 @@ class EgtsService:
                 self.mq_conn.close()
                 tid = self.rid
                 r = requests.get(f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={tid}&imei={self.imei}", verify=False)
-                config.logger.info(f"Sent: '{self.imei} EOF'")
+                LOGGER.info(f"Sent: '{self.imei} EOF'")
                 return f"Sent: '{self.imei} EOF'"
             except:
                 self.connect_to_mq()
@@ -263,9 +274,11 @@ class EgtsService:
             self.mq_send_eof()
 
     def disconnect_from_mq(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--disconnect_from_mq")
         self.mq_conn.close()
 
     def get_route_from_ext(self, rid):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--get_route_from_ext")
         self.rid = rid
         route = ApiService.getRoute(self.rid)
         if route:
@@ -275,9 +288,10 @@ class EgtsService:
             if self.route.ok:
                 self.calc_points()
             else:
-                config.logger.info(f"{route}")
+                LOGGER.info(f"{route}")
 
     def calc_points(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--calc_points")
         self.init_points = []
         config.coord_id_now = 0
         for segment in self.route.results:
@@ -295,7 +309,7 @@ class EgtsService:
                 # if point.coordinatesId is None:
                 #     point.coordinatesId = segment.coordinates[segment.coordinates.index(point)-1].coordinatesId+0.001
                 point.speed = int(round(speed + speed_random_index))
-                # config.logger.info(point.speed)
+                # LOGGER.info(point.speed)
                 point.latitude = point.latitude + lat_rand
                 point.longitude = point.longitude + long_rand
                 point.tid = self.rid
@@ -304,7 +318,7 @@ class EgtsService:
                 long = point.longitude
                 #config.coord_id_now = point.coordinatesId
                 if i < len(segment.coordinates) - 1:
-                    #config.logger.info(f'i: {i + 1}, len: {len(segment.coordinates)}')
+                    #LOGGER.info(f'i: {i + 1}, len: {len(segment.coordinates)}')
                     coord_next = segment.coordinates[i + 1]
                     point.angle = int(math.atan2(coord_next.longitude - point.longitude,
                                                  coord_next.latitude - point.latitude) * 180 / math.pi)
@@ -336,6 +350,7 @@ class EgtsService:
         #self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--callback_mq_send")
         try:
             return self.mq_send(point)
         except:
@@ -343,6 +358,7 @@ class EgtsService:
             return self.mq_send(point)
 
     def get_cur_point(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--get_cur_point")
         try:
             # Получите одно сообщение из очереди
             method_frame, header_frame, body = self.mq_channel.basic_get(queue=f'{self.imei}_base', auto_ack=False)
@@ -374,17 +390,20 @@ class EgtsService:
             self.get_cur_point()
 
 
-        # config.logger.info(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
+        # LOGGER.info(f"ID({point.coordinatesId}) {point.angle} {point.speed} {point.latitude} {point.longitude}")
 
     def clear_queue(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--clear_queue")
         self.mq_channel.queue_purge(queue=self.imei)
         return True
 
     def delete_queue(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--delete_queue")
         self.mq_channel.queue_delete(queue=self.imei)
         return True
 
     def push_all_points(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--push_all_points")
         self.total_ttl = 0
         total_ttl = 0
         init_sleep_ts = 0
@@ -404,16 +423,18 @@ class EgtsService:
             self.current_point = point
             # if point.sleeper is False:
             resp = self.mq_send_base(point)
-            config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
-                # config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+            LOGGER.debug(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                # LOGGER.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             # else:
             #     resp = self.mq_send_base(point, point.sleep_time)
-            #     config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+            #     LOGGER.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
             total_ttl += config.sec_interval * 1000
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
+        LOGGER.info(f"Sent {len(self.init_points)} points to {self.imei}")
 
     def push_points_to_mq(self, latency=0, force=False):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--push_points_to_mq")
         msgs = self.mq_get_messages()
         if msgs == 0:
             for point in self.init_points:
@@ -423,8 +444,8 @@ class EgtsService:
                     self.current_point = point
                     # if point.sleeper is False:
                     resp = self.callback_mq_send(point)
-                    config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
-                    #config.logger.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    LOGGER.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+                    #LOGGER.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
                     time.sleep(latency)  # Задержка в 1 секунду
                     # else:
                     #     time.sleep(point.sleep_time)
@@ -433,13 +454,14 @@ class EgtsService:
             self.init_points = []
             return True
         else:
-            config.logger.info('Очередь не пуста!')
+            LOGGER.info('Очередь не пуста!')
             if force:
                 self.clear_queue()
                 self.push_points_to_mq(latency=latency)
             return False
 
     def mq_get_messages(self):
+        LOGGER = logging.getLogger(__name__ + ".EgtsService--mq_get_messages")
         method_frame, header_frame, body = self.mq_channel.basic_get(queue=self.imei, auto_ack=False)
         try:
             self.msg_count = method_frame.message_count
@@ -455,21 +477,22 @@ class EgtsService:
 
 
 def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=False):
-    config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, INTERVAL: {sec_interval}, FORMAT: {new_format}")
+    LOGGER = logging.getLogger(__name__ + ".add_imei")
+    LOGGER.info(f"IMEI: {imei}, ROUTE: {route_id}, INTERVAL: {sec_interval}, FORMAT: {new_format}")
     if imei not in imeis:
         if new_format == 1:
-            config.logger.info(f"Inserting route for {imei}")
+            LOGGER.info(f"Inserting route for {imei}")
             config.threads[imei] = EgtsService(imei, regNumber)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
-            config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
+            LOGGER.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
             config.threads[imei].push_all_points()
         else:
-            config.logger.info(f'Started thread {imei} with {sec_interval} seconds interval')
+            LOGGER.info(f'Started thread {imei} with {sec_interval} seconds interval')
             config.threads[imei] = EgtsService(imei, regNumber)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
-            config.logger.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
+            LOGGER.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
             config.threads[imei].push_points_to_mq(sec_interval, force=force)
             config.threads[imei].mq_send_eof()
         try:
@@ -477,7 +500,7 @@ def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=Fals
         except:
             pass
         # stop_imei(imei)
-        # config.logger.info(f'Finished thread {imei}')
+        # LOGGER.info(f'Finished thread {imei}')
 
 
 # def stop_imei(imei):
@@ -515,9 +538,10 @@ def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=Fals
 
 
 def queues_list():
+    LOGGER = logging.getLogger(__name__ + ".queues_list")
     r = requests.get(f"http://{MQ.host}:{MQ.apiport}/api/queues", auth=(MQ.user, MQ.password), verify=False, proxies=None)
     js = r.json()
-    #config.logger.info(js)
+    #LOGGER.info(js)
     queues = []
     for item in js:
         if item.get('vhost', None) == MQ.vhost:
@@ -530,6 +554,7 @@ def queues_list():
 
 
 def get_base_queues():
+    LOGGER = logging.getLogger(__name__ + ".get_base_queues")
     url_base = f"http://{MQ.host}:{MQ.apiport}/api/queues/{MQ.vhost}"
     result = []
     try:
@@ -540,11 +565,12 @@ def get_base_queues():
             if name.find('base')>-1:
                 result.append(name.split('_')[0])
     except Exception as e:
-        config.logger.info(e)
+        LOGGER.info(e)
     return result
 
 
 def get_imeis(imeis = None):
+    LOGGER = logging.getLogger(__name__ + ".get_imeis")
     if not imeis:
         imeis = get_base_queues()
     else:
@@ -565,6 +591,7 @@ def get_imeis(imeis = None):
 
 
 def get_imei(imei):
+    LOGGER = logging.getLogger(__name__ + ".get_imei")
     url_base = f"http://{MQ.host}:{MQ.apiport}/api/queues/{MQ.vhost}/{imei}_base"
     tid = int(str(imei)[-8:])
     try:
@@ -618,6 +645,7 @@ def get_imei(imei):
         return d
 #
 def stop_imei(imei):
+    LOGGER = logging.getLogger(__name__ + ".stop_imei")
     url_base = f"http://{MQ.host}:{MQ.apiport}/api/queues/{MQ.vhost}/{imei}_base"
     tid = int(str(imei)[-8:])
     try:
@@ -703,6 +731,7 @@ def stop_imei(imei):
 
 
 if __name__ == '__main__':
+    LOGGER = logging.getLogger(__name__)
     srv = EgtsService("358480081523995")
     srv.get_route_from_ext(22)
     srv.push_points_to_mq(sec_interval, force=True)
