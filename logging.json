@@ -18,16 +18,25 @@
             "formatter": "standard",
             "filename": "app.log",
             "mode": "a"
+        },
+        "http": {
+            "level": "ERROR",
+            "class": "logging.handlers.HTTPHandler",
+            "host": "logger.local:50000",
+            "url": "/log",
+            "method": "POST",
+            "formatter": "standard"
         }
     },
     "loggers": {
         "": {
             "handlers": [
                 "console",
-                "file"
+                "file",
+                "http"
             ],
             "level": "INFO",
-            "propagate": true
+            "propagate": false
         }
     }
 }
