@@ -114,7 +114,7 @@ def get_cur_point(imei):
         return None
 
     except Exception as e:
-        LOGGER.error("%s: " + e, config.name, exc_info=True)
+        LOGGER.error("%s: " + str(e), config.name, exc_info=True)
         get_cur_point(imei)
 
 
@@ -195,7 +195,7 @@ class EgtsService:
         try:
             self.msg_count = self.queue.method.message_count
         except Exception as e:
-            LOGGER.error("%s: " + e, config.name, exc_info=True)
+            LOGGER.error("%s: " + str(e), config.name, exc_info=True)
 
 
     def mq_send_base(self, msg, sleep_time_sec = None):
@@ -565,7 +565,7 @@ def get_base_queues():
             if name.find('base')>-1:
                 result.append(name.split('_')[0])
     except Exception as e:
-        LOGGER.error("%s: " + e, config.name, exc_info=True)
+        LOGGER.error("%s: " + str(e), config.name, exc_info=True)
     return result
 
 
