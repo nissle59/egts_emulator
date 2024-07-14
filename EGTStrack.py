@@ -105,7 +105,7 @@ class EGTStrack(object):
         self._imei = str(self._tid)
         while len(self._imei) < 15:
             self._imei = '0' + self._imei
-        LOGGER.info(f"ID: {self._tid}, IMEI: {deviceimei}, IMEI_CROP: {self._imei}, IMSI: {self.imsi}, MSISDN: {self.msisdn}", config.name)
+        LOGGER.info("%s: " + f"ID: {self._tid}, IMEI: {deviceimei}, IMEI_CROP: {self._imei}, IMSI: {self.imsi}, MSISDN: {self.msisdn}", config.name)
         self._pt = b'\x01'  # Ид пакета # EGTSAppdata
         self._hcs = b'\x00'  # header conlrol sum size = 1 Byte
         self._sfrcs = 0  # service force control sum
@@ -245,7 +245,7 @@ class EGTStrack(object):
             rl = len(_service).to_bytes(2, byteorder='little')
 
             headService = rl + rn + rfl + _oid + tm + sst + rst
-            LOGGER.info(f"IMEI: {self._imei}, IMSI: {self.imsi}, MSISDN: {self.msisdn}", config.name)
+            LOGGER.info("%s: " + f"IMEI: {self._imei}, IMSI: {self.imsi}, MSISDN: {self.msisdn}", config.name)
         elif record_types == 4:  # GTS_SR_AUTH_SERV_IDENTITY	4	/* Not described in protocol docs*/
             self._pt = b'\x01'  # Ид пакета # EGTSAppdata
             recLen = b''  # 2 bytes
@@ -270,7 +270,7 @@ class EGTStrack(object):
         if self._service == None:
             raise TypeError('Unknown packet type: {}'.format(self._service))
         self._pid = self._rn
-        #LOGGER.info('number packet^', self._pid, config.name)
+        #LOGGER.info("%s: " + 'number packet^', self._pid, config.name)
         if self._service != None:
             self._sfrcs = self.data_crc(self._service).to_bytes(2, byteorder='little')
             self._fdl = len(self._service).to_bytes(2, byteorder='little')
@@ -278,7 +278,7 @@ class EGTStrack(object):
         self._hcs = self.header_crc(getBytes).to_bytes(1, byteorder='little')
         getBytes = getBytes + self._hcs + self._service + self._sfrcs
         self._service = None
-        #LOGGER.info(f"ID: {self._tid}, IMEI_CROP: {self._imei}", config.name)
+        #LOGGER.info("%s: " + f"ID: {self._tid}, IMEI_CROP: {self._imei}", config.name)
         return getBytes
         pass
 
@@ -301,10 +301,10 @@ class EGTStrack(object):
         getBytes += packetHL
         getBytes += packetHE
         getBytes += self._fdl  # .to_bytes(2, byteorder='big')
-        # LOGGER.info(self._pid.to_bytes(2, byteorder='little'), config.name)
+        # LOGGER.info("%s: " + self._pid.to_bytes(2, byteorder='little'), config.name)
         getBytes += self._pid.to_bytes(2, byteorder='little')
         getBytes += self._pt
-        # LOGGER.info(len(getBytes), config.name)
+        # LOGGER.info("%s: " + len(getBytes), config.name)
         return getBytes
         pass
 
