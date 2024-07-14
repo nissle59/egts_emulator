@@ -3,6 +3,8 @@ import logging
 import logging.config
 import sys
 
+name = "EGTS Web Service"
+
 logging.config.dictConfig(json.load(open('logging.json','r')))
 LOGGER = logging.getLogger(__name__)
 
