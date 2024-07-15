@@ -22,7 +22,7 @@
         "http": {
             "level": "ERROR",
             "class": "logging.handlers.HTTPHandler",
-            "host": "logger.local:50000",
+            "host": "loc.logger.services.local:50000",
             "url": "/log",
             "method": "POST",
             "formatter": "standard"
