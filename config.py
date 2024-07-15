@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 class MQ:
     #host = 'localhost'
-    host = 'rmq.local'
+    host = 'rmq.db.services.local'
     user = 'rmuser'
     password = 'rmpassword'
     port = 5672
