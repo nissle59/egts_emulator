@@ -200,7 +200,7 @@ class EgtsService:
                                                             # DLX для перенаправления сообщений
                                                         })
         self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct', durable=True,
-                                         auto_delete=True)
+                                         auto_delete=False)
         self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
 
         try:
