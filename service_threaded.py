@@ -184,7 +184,7 @@ class EgtsService:
         # Имя очереди
         queue_name = str(self.imei)
         try:
-            r = requests.put(
+            r = requests.delete(
                 url=f'http://{MQ.host}:{MQ.apiport}/api/exchanges/{MQ.vhost}/{self.imei}_ex',
                 auth=HTTPBasicAuth(MQ.user, MQ.password),
                 headers=self.rhead
