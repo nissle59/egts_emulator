@@ -8,7 +8,7 @@
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "standard"
         },
@@ -35,7 +35,7 @@
                 "file",
                 "http"
             ],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": false
         }
     }

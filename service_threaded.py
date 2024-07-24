@@ -287,6 +287,7 @@ class EgtsService:
     def get_route_from_ext(self, rid):
         LOGGER = logging.getLogger(__name__ + ".EgtsService--get_route_from_ext")
         self.rid = rid
+        LOGGER.info(f"Start getting route for {self.imei}")
         route = ApiService.getRoute(self.rid)
         if route:
             json.dump(route, open('route.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2, default=str)
@@ -296,6 +297,7 @@ class EgtsService:
                 self.calc_points()
             else:
                 LOGGER.info("%s: " + f"{route}", config.name)
+        LOGGER.info(f"Stop getting route for {self.imei}")
 
     def calc_points(self):
         LOGGER = logging.getLogger(__name__ + ".EgtsService--calc_points")
