@@ -195,7 +195,7 @@ class EgtsService:
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
         self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True,
                                                         arguments={
-                                                            'x-expires': 120000,
+                                                            #'x-expires': 120000,
                                                             'x-dead-letter-exchange': f'{queue_name}_ex'
                                                             # DLX для перенаправления сообщений
                                                         })
