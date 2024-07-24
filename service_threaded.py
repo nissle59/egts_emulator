@@ -183,7 +183,14 @@ class EgtsService:
 
         # Имя очереди
         queue_name = str(self.imei)
-
+        try:
+            r = requests.put(
+                url=f'http://{MQ.host}:{MQ.apiport}/api/exchanges/{MQ.vhost}/{self.imei}_ex',
+                auth=HTTPBasicAuth(MQ.user, MQ.password),
+                headers=self.rhead
+            )
+        except:
+            pass
         # Создание очереди (если не существует)
         self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
         self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True,
