@@ -192,16 +192,25 @@ class EgtsService:
         except:
             pass
         # Создание очереди (если не существует)
-        self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
-        self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True,
-                                                        arguments={
-                                                            #'x-expires': 120000,
-                                                            'x-dead-letter-exchange': f'{queue_name}_ex'
-                                                            # DLX для перенаправления сообщений
-                                                        })
-        self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct', durable=True,
-                                         auto_delete=False)
-        self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
+        try:
+            self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
+        except:
+            pass
+        try:
+            self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True,
+                                                            arguments={
+                                                                #'x-expires': 120000,
+                                                                'x-dead-letter-exchange': f'{queue_name}_ex'
+                                                                # DLX для перенаправления сообщений
+                                                            })
+        except: pass
+        try:
+            self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct', durable=True,
+                                             auto_delete=False)
+        except: pass
+        try:
+            self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
+        except: pass
 
         try:
             self.msg_count = self.queue.method.message_count
@@ -499,8 +508,7 @@ def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=Fals
             config.threads[imei] = EgtsService(imei, regNumber)
             config.threads[imei].get_route_from_ext(int(route_id))
             imeis.append(imei)
-            LOGGER.info("%s: " + f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}",
-                        config.name)
+            LOGGER.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
             config.threads[imei].push_all_points()
         else:
             LOGGER.info("%s: " + f'Started thread {imei} with {sec_interval} seconds interval', config.name)
