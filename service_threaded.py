@@ -193,10 +193,6 @@ class EgtsService:
         #     pass
         # Создание очереди (если не существует)
         try:
-            self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
-        except:
-            pass
-        try:
             #self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct', durable=True,
             #                                 auto_delete=False)
             self.mq_channel.exchange_declare(exchange=f'egts.emulator', exchange_type='direct', durable=True,
@@ -211,6 +207,10 @@ class EgtsService:
                                                                 # DLX для перенаправления сообщений
                                                             })
         except: pass
+        try:
+            self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
+        except:
+            pass
 
         try:
             #self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
@@ -429,7 +429,7 @@ class EgtsService:
     def delete_queue(self):
         LOGGER = logging.getLogger(__name__ + ".EgtsService--delete_queue")
         self.mq_channel.queue_delete(queue=self.imei)
-        self.mq_channel
+        #self.mq_channel
         return True
 
     def push_all_points(self):
