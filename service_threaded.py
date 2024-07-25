@@ -183,33 +183,38 @@ class EgtsService:
 
         # Имя очереди
         queue_name = str(self.imei)
-        try:
-            r = requests.delete(
-                url=f'http://{MQ.host}:{MQ.apiport}/api/exchanges/{MQ.vhost}/{self.imei}_ex',
-                auth=HTTPBasicAuth(MQ.user, MQ.password),
-                headers=self.rhead
-            )
-        except:
-            pass
+        # try:
+        #     r = requests.delete(
+        #         url=f'http://{MQ.host}:{MQ.apiport}/api/exchanges/{MQ.vhost}/{self.imei}_ex',
+        #         auth=HTTPBasicAuth(MQ.user, MQ.password),
+        #         headers=self.rhead
+        #     )
+        # except:
+        #     pass
         # Создание очереди (если не существует)
         try:
             self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
         except:
             pass
         try:
-            self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True,
-                                                            arguments={
-                                                                #'x-expires': 120000,
-                                                                'x-dead-letter-exchange': f'{queue_name}_ex'
-                                                                # DLX для перенаправления сообщений
-                                                            })
-        except: pass
-        try:
-            self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct', durable=True,
+            #self.mq_channel.exchange_declare(exchange=f'{queue_name}_ex', exchange_type='direct', durable=True,
+            #                                 auto_delete=False)
+            self.mq_channel.exchange_declare(exchange=f'egts.emulator', exchange_type='direct', durable=True,
                                              auto_delete=False)
         except: pass
         try:
-            self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
+            self.base_queue = self.mq_channel.queue_declare(queue=f'{queue_name}_base', auto_delete=False, durable=True,
+                                                            arguments={
+                                                                #'x-expires': 120000,
+                                                                #'x-dead-letter-exchange': f'{queue_name}_ex'
+                                                                'x-dead-letter-exchange': f'egts.emulator'
+                                                                # DLX для перенаправления сообщений
+                                                            })
+        except: pass
+
+        try:
+            #self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
+            self.mq_channel.queue_bind(exchange=f'egts.emulator', queue=queue_name, routing_key=f'{queue_name}_base')
         except: pass
 
         try:
