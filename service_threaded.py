@@ -208,7 +208,7 @@ class EgtsService:
                                                             })
         except: pass
         try:
-            self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True, arguments={'x-expires': 120000})
+            self.queue = self.mq_channel.queue_declare(queue=queue_name, auto_delete=False, durable=True)
         except:
             pass
 
@@ -507,6 +507,11 @@ def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=Fals
     LOGGER = logging.getLogger(__name__ + ".add_imei")
     LOGGER.info("%s: " + f"IMEI: {imei}, ROUTE: {route_id}, INTERVAL: {sec_interval}, FORMAT: {new_format}",
                 config.name)
+
+    ########## DB ###############
+
+    #############################
+
     if imei not in imeis:
         #if new_format == 1:
         LOGGER.info("%s: " + f"Inserting route for {imei}", config.name)
