@@ -508,22 +508,22 @@ def add_imei(imei, route_id, regNumber, sec_interval=1, new_format=0, force=Fals
     LOGGER.info("%s: " + f"IMEI: {imei}, ROUTE: {route_id}, INTERVAL: {sec_interval}, FORMAT: {new_format}",
                 config.name)
     if imei not in imeis:
-        if new_format == 1:
-            LOGGER.info("%s: " + f"Inserting route for {imei}", config.name)
-            config.threads[imei] = EgtsService(imei, regNumber)
-            config.threads[imei].get_route_from_ext(int(route_id))
-            imeis.append(imei)
-            LOGGER.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
-            config.threads[imei].push_all_points()
-        else:
-            LOGGER.info("%s: " + f'Started thread {imei} with {sec_interval} seconds interval', config.name)
-            config.threads[imei] = EgtsService(imei, regNumber)
-            config.threads[imei].get_route_from_ext(int(route_id))
-            imeis.append(imei)
-            LOGGER.info("%s: " + f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}",
-                        config.name)
-            config.threads[imei].push_points_to_mq(sec_interval, force=force)
-            config.threads[imei].mq_send_eof()
+        #if new_format == 1:
+        LOGGER.info("%s: " + f"Inserting route for {imei}", config.name)
+        config.threads[imei] = EgtsService(imei, regNumber)
+        config.threads[imei].get_route_from_ext(int(route_id))
+        imeis.append(imei)
+        LOGGER.info(f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}")
+        config.threads[imei].push_all_points()
+        # else:
+        #     LOGGER.info("%s: " + f'Started thread {imei} with {sec_interval} seconds interval', config.name)
+        #     config.threads[imei] = EgtsService(imei, regNumber)
+        #     config.threads[imei].get_route_from_ext(int(route_id))
+        #     imeis.append(imei)
+        #     LOGGER.info("%s: " + f"IMEI: {imei}, ROUTE: {route_id}, POINTS: {len(config.threads[imei].init_points)}",
+        #                 config.name)
+        #     config.threads[imei].push_points_to_mq(sec_interval, force=force)
+        #     config.threads[imei].mq_send_eof()
         try:
             imeis.remove(imei)
         except:
@@ -707,12 +707,12 @@ def stop_imei(imei):
                     pass
                 d['status'] = 'ending...'
                 return d
-            try:
-                r_cb = requests.get(
-                    f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={route}&imei={imei}",
-                    verify=False)
-            except:
-                pass
+            # try:
+            #     r_cb = requests.get(
+            #         f"http://api-external.tm.8525.ru/rnis/emulationCompleted?token=5jossnicxhn75lht7aimal7r2ocvg6o7&taskId={route}&imei={imei}",
+            #         verify=False)
+            # except:
+            #     pass
             return d
         else:
             d = {
