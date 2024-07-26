@@ -229,7 +229,7 @@ class EgtsService:
                 # mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
                 mess = msg.to_b64()
             else:
-                mess = base64.b64encode(msg)
+                mess = msg
                 LOGGER.info(f"Sent: '{self.imei} EOF'")
             if sleep_time_sec:
                 self.total_ttl += sleep_time_sec * 1000
