@@ -257,7 +257,7 @@ class EgtsService:
             except:
                 message = f"Sent: 'EOF'"
             LOGGER.info(message)
-            return mess
+            return message
         else:
             LOGGER.info("NOT CONNECTED TO RMQ")
             self.connect_to_mq()
@@ -452,7 +452,7 @@ class EgtsService:
                 sleep_flag = True
             self.current_point = point
             resp = self.mq_send_base(point)
-            LOGGER.debug(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
+            LOGGER.info(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
             total_ttl += config.sec_interval * 1000
         self.mq_send_base(int(0).to_bytes(64, byteorder='little'), point=False)
