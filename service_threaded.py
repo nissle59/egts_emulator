@@ -256,7 +256,7 @@ class EgtsService:
                 message = f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPEED {msg.speed}, ANGLE {msg.angle}'"
             except:
                 message = f"Sent: 'EOF'"
-            LOGGER.info(message)
+            #LOGGER.info(message)
             return message
         else:
             LOGGER.info("NOT CONNECTED TO RMQ")
