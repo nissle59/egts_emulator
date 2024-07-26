@@ -376,7 +376,7 @@ class EgtsService:
                             tid=self.rid,
                             sleep_time=segment.sleep)
                     )
-        self.init_points.append(int(0).to_bytes(64, byteorder='little'))
+        self.init_points.append(base64.b64encode(int(0).to_bytes(64, byteorder='little')))
         # self.init_points = sorted(self.init_points, key=lambda point: point.coordinatesId)
 
     def callback_mq_send(self, point):
@@ -442,20 +442,24 @@ class EgtsService:
         LOGGER.info(f"Sending {len(self.init_points)} points...")
         for point in self.init_points:
             ts = dt_start + round(total_ttl / 1000)
-            point.timestamp = ts
-            if point.sleeper:
-                if sleep_flag is False:
-                    init_sleep_ts = ts
-                sleep_elapsed = round(init_sleep_ts + point.sleep_time - ts)
-                point.sleep_time = sleep_elapsed
-            else:
-                sleep_flag = True
-            self.current_point = point
-            resp = self.mq_send_base(point)
+            try:
+                point.timestamp = ts
+                if point.sleeper:
+                    if sleep_flag is False:
+                        init_sleep_ts = ts
+                    sleep_elapsed = round(init_sleep_ts + point.sleep_time - ts)
+                    point.sleep_time = sleep_elapsed
+                else:
+                    sleep_flag = True
+                self.current_point = point
+                resp = self.mq_send_base(point)
+            except Exception as e:
+                LOGGER.warning(e, exc_info=True)
+                resp = self.mq_send_base(point, point=False)
             LOGGER.debug(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
             total_ttl += config.sec_interval * 1000
-        self.mq_send_base(int(0).to_bytes(64, byteorder='little'), point=False)
+        #self.mq_send_base(int(0).to_bytes(64, byteorder='little'), point=False)
         #self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
         LOGGER.info(f"Sent {len(self.init_points)} points to {self.imei}")
