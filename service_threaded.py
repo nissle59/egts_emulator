@@ -230,7 +230,7 @@ class EgtsService:
                 mess = msg.to_b64()
             else:
                 mess = msg
-                # LOGGER.info("%s: " + f"Sent: '{self.imei} EOF'", config.name)
+                LOGGER.info(f"Sent: '{self.imei} EOF'")
             if sleep_time_sec:
                 self.total_ttl += sleep_time_sec * 1000
                 self.mq_channel.basic_publish(
