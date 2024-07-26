@@ -213,10 +213,10 @@ class EgtsService:
         except:
             pass
 
-        # try:
-        #     #self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
-        #     self.mq_channel.queue_bind(exchange=f'egts.emulator', queue=queue_name, routing_key=f'{queue_name}_base')
-        # except: pass
+        try:
+            #self.mq_channel.queue_bind(exchange=f'{queue_name}_ex', queue=queue_name, routing_key=f'{queue_name}_base')
+            self.mq_channel.queue_bind(exchange=f'egts.emulator', queue=queue_name, routing_key=f'{queue_name}_base')
+        except: pass
 
         try:
             self.msg_count = self.queue.method.message_count
