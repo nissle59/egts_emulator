@@ -5,17 +5,22 @@ import sys
 
 name = "EGTS Web Service"
 
-logging.config.dictConfig(json.load(open('logging.json','r')))
+logging.config.dictConfig(json.load(open('logging.json', 'r')))
 LOGGER = logging.getLogger(__name__)
 
+
 class MQ:
-    #host = 'localhost'
+    # host = 'localhost'
     host = 'rmq.db.services.local'
     user = 'rmuser'
     password = 'rmpassword'
     port = 5672
     apiport = 15672
     vhost = 'egts'
+
+
+DSN = 'postgresql://postgres:psqlpass@pg.db.services.local/vindcgibdd'
+DSN_DEBUG = 'postgresql://postgres:psqlpass@10.8.0.5/vindcgibdd'
 
 threads = {}
 
