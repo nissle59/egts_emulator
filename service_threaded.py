@@ -222,13 +222,13 @@ class EgtsService:
         except Exception as e:
             LOGGER.error("%s: " + str(e), config.name, exc_info=True)
 
-    def mq_send_base(self, msg, sleep_time_sec=None):
+    def mq_send_base(self, msg, sleep_time_sec=None, point=True):
         LOGGER = logging.getLogger(__name__ + ".EgtsService--mq_send_base")
         if self.mq_conn and self.mq_channel:
-            try:
+            if point:
                 # mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
                 mess = msg.to_b64()
-            except Exception as e:
+            else:
                 mess = msg
                 # LOGGER.info("%s: " + f"Sent: '{self.imei} EOF'", config.name)
             if sleep_time_sec:
@@ -455,7 +455,8 @@ class EgtsService:
             LOGGER.debug(f"Point {self.init_points.index(point)} of {len(self.init_points)}, {resp}")
             self.total_ttl += config.sec_interval * 1000
             total_ttl += config.sec_interval * 1000
-        self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
+        self.mq_send_base(int(0).to_bytes(64, byteorder='little'), point=False)
+        #self.mq_send_base(int(0).to_bytes(64, byteorder='little'))
 
         LOGGER.info(f"Sent {len(self.init_points)} points to {self.imei}")
 
