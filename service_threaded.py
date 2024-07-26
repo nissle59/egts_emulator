@@ -256,10 +256,10 @@ class EgtsService:
                 message = f"Sent: 'LAT {msg.latitude}, LONG {msg.longitude}, SPEED {msg.speed}, ANGLE {msg.angle}'"
             except:
                 message = f"Sent: 'EOF'"
-            LOGGER.debug(message)
+            LOGGER.info(message)
             return mess
         else:
-            LOGGER.debug("NOT CONNECTED TO RMQ")
+            LOGGER.info("NOT CONNECTED TO RMQ")
             self.connect_to_mq()
             self.mq_send_base(msg)
 
