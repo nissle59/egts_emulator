@@ -12,7 +12,7 @@ import pika
 from pika.exceptions import ChannelClosedByBroker
 import socks
 import threading
-
+import base64
 import config
 import model
 from ApiService import ApiService
@@ -229,7 +229,7 @@ class EgtsService:
                 # mess = msg.to_egts_packet(self.imei, round(self.total_ttl))
                 mess = msg.to_b64()
             else:
-                mess = msg
+                mess = base64.b64encode(msg)
                 LOGGER.info(f"Sent: '{self.imei} EOF'")
             if sleep_time_sec:
                 self.total_ttl += sleep_time_sec * 1000
